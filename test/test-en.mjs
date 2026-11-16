@@ -4,12 +4,7 @@
 import { readFileSync } from 'fs';
 import { setDictionary, wordToTokens, transcribe } from '../src/english.js';
 
-const m = new Map();
-for (const line of readFileSync(new URL('../data/cmudict-en.txt', import.meta.url), 'utf8').split('\n')) {
-  const t = line.indexOf('\t');
-  if (t > 0) m.set(line.slice(0, t), line.slice(t + 1));
-}
-setDictionary(m);
+setDictionary(readFileSync(new URL('../data/cmudict-en.txt', import.meta.url), 'utf8'));
 
 const CASES = {
   grow: 'G R ŏ', toe: 'T ŏ', up: 'ŭ P', view: 'V ū', ado: 'ă D oo', joke: 'J ŏ K', thought: 'TH ŏ T',

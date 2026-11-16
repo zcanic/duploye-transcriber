@@ -100677,10 +100677,10 @@ septic	RhPTkJ
 septima	RhPTlLd
 septimus	RhPTkLkR
 septuagenarian	RhPCpdIdMhQldM
-sepulvado	RjPpKVaDm
-sepulveda	RjPpKVjDd
 sepultura	RhPoKToQo
 sepultura's	RhPoKToQoY
+sepulvado	RjPpKVaDm
+sepulveda	RjPpKVjDd
 sequa	RhJWd
 sequa's	RhJWdY
 sequeira	RjJWhQd
@@ -107374,9 +107374,9 @@ stillwell's	RTkKWhKY
 stils	RTkKY
 stilson	RTkKRdM
 stilt	RTkKT
-stilton	RTkKTdM
 stilted	RTkKTkD
 stiltner	RTkKTMi
+stilton	RTkKTdM
 stilts	RTkKTR
 stilwell	RTkKWhK
 stimac	RTkLdJ

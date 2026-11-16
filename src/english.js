@@ -47,20 +47,33 @@ const PHONES = ['AA', 'AE', 'AH', 'AX', 'AO', 'AW', 'AY', 'EH', 'ER', 'EY', 'IH'
   'B', 'CH', 'D', 'DH', 'F', 'G', 'HH', 'JH', 'K', 'L', 'M', 'N', 'NG', 'P', 'R', 'S', 'SH', 'T', 'TH', 'V', 'W', 'Y', 'Z', 'ZH'];
 const CODE = 'abcdefghijklmnopBCDEFGHIJKLMNPQRSTUVWXYZ';
 const DECODE = Object.fromEntries([...CODE].map((c, i) => [c, PHONES[i]]));
+// The dictionary stays one sorted string; words are found by binary search over
+// its lines. Nothing is parsed up front, so loading 125,000 words costs no main-thread time.
 let dict = null;
 
 export async function loadDictionary(url) {
   if (dict) return;
-  const text = await (await fetch(url)).text();
-  const m = new Map();
-  for (const line of text.split('\n')) {
-    const tab = line.indexOf('\t');
-    if (tab > 0) m.set(line.slice(0, tab), line.slice(tab + 1));
-  }
-  dict = m;
+  dict = await (await fetch(url)).text();
 }
 export const dictionaryReady = () => !!dict;
-export const setDictionary = (map) => { dict = map; }; // for tests
+export const setDictionary = (text) => { dict = text; }; // for tests
+
+function lookup(word) {
+  if (!dict) return undefined;
+  let lo = 0, hi = dict.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    const start = dict.lastIndexOf('\n', mid - 1) + 1; // start of the line holding mid
+    const tab = dict.indexOf('\t', start);
+    let end = dict.indexOf('\n', start);
+    if (end < 0) end = dict.length;
+    if (tab < 0 || tab > end) { hi = start; continue; }
+    const w = dict.slice(start, tab);
+    if (w === word) return dict.slice(tab + 1, end);
+    if (w < word) lo = end + 1; else hi = start;
+  }
+  return undefined;
+}
 
 // ---------- phones -> Sloan signs ----------
 const SPELL_VOWEL = { a: 'ă', e: 'ĕ', i: 'ĭ', y: 'ĭ', o: 'ŏ', u: 'ŭ' };
@@ -163,10 +176,10 @@ export function guessTokens(word) {
 
 export function wordToTokens(word) {
   const key = word.toLowerCase().replace(/’/g, "'");
-  const code = dict?.get(key) ?? dict?.get(key.replace(/'s$/, ''));
+  const code = lookup(key) ?? lookup(key.replace(/'s$/, ''));
   if (!code) return { tokens: guessTokens(word), guessed: true };
   const phones = [...code].map((c) => DECODE[c]);
-  if (key.endsWith("'s") && !dict.get(key)) phones.push(/[ptkf]$/i.test(key.slice(0, -2)) ? 'S' : 'Z');
+  if (key.endsWith("'s") && !lookup(key)) phones.push(/[ptkf]$/i.test(key.slice(0, -2)) ? 'S' : 'Z');
   return { tokens: phonesToTokens(phones, key), guessed: false };
 }
 

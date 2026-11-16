@@ -2,7 +2,7 @@
 
 Usage: python3 tools/build-cmudict.py path/to/cmudict.dict
 
-Output: one line per word, "word<TAB>code", where code spells the first
+Output: one line per word, sorted by word, "word<TAB>code", where code spells the first
 pronunciation with one character per phoneme (see PHONES; stress is dropped,
 except that unstressed AH becomes AX, the schwa).
 """
@@ -31,5 +31,6 @@ for line in open(sys.argv[1], encoding='utf-8'):
             base = 'AX'
         code.append(MAP[base])
     out.append(f"{word}\t{''.join(code)}")
+out.sort(key=lambda l: l.split('\t', 1)[0])  # sorted: the browser looks words up by binary search
 open('data/cmudict-en.txt', 'w', encoding='utf-8').write('\n'.join(out) + '\n')
 print(len(out), 'words')
