@@ -138,7 +138,19 @@ pre { background: var(--chip); padding: 12px 14px; border-radius: 10px; overflow
 .pager a:hover { border-color: var(--accent); }
 .pager small { color: var(--muted); font-size: 12px; }
 .pager .next { margin-left: auto; text-align: right; }
-.loading { color: var(--muted); }
+/* Content arrives after the page transition: the loading note shows only if it takes a while,
+   then the lesson rises in, block by block. */
+.loading { color: var(--muted); animation: appear .2s .5s both; }
+@keyframes appear { from { opacity: 0; } }
+article.ready > * { animation: rise-in .5s cubic-bezier(.2, .8, .2, 1) both; }
+article.ready > :nth-child(2) { animation-delay: .04s; }
+article.ready > :nth-child(3) { animation-delay: .08s; }
+article.ready > :nth-child(4) { animation-delay: .12s; }
+article.ready > :nth-child(5) { animation-delay: .16s; }
+article.ready > :nth-child(n+6) { animation-delay: .2s; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(10px); } }
+nav.lessons > * { animation: appear .35s both; }
+nav.lessons.settled > * { animation: none; }
 .err { color: #b42318; }
 
 @media (max-width: 900px) {
@@ -162,4 +174,4 @@ pre { background: var(--chip); padding: 12px 14px; border-radius: 10px; overflow
   .nb-read .nb-word { grid-column: 2; grid-row: 1; }
   .nb-sign { width: calc(25% - 5px); }
 }
-@media (prefers-reduced-motion: reduce) { .word, .nb-drill-item.open .nb-paper { transition: none; animation: none; } }
+@media (prefers-reduced-motion: reduce) { .word, .nb-drill-item.open .nb-paper, article.ready > *, nav.lessons > *, .loading { transition: none; animation: none; } }

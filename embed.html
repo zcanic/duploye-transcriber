@@ -14,6 +14,12 @@
   .demo.blue { color: var(--accent); }
   .inline-demo { font-size: 18px; }
 </style>
+<script>
+  // Tell the page transition which way we are going (canvas <-> lessons), before the first frame.
+  addEventListener('pagereveal', (e) => {
+    if (e.viewTransition) e.viewTransition.types.add(/learn\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
+  });
+</script>
 </head>
 <body>
 <header class="top">

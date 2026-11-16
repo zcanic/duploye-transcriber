@@ -10,11 +10,17 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
 <link rel="preload" href="fonts/NotoSansDuployan-Regular.ttf" as="fetch" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="src/learn.css">
+<script>
+  // Tell the page transition which way we are going (canvas <-> lessons), before the first frame.
+  addEventListener('pagereveal', (e) => {
+    if (e.viewTransition) e.viewTransition.types.add(/learn\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
+  });
+</script>
 </head>
 <body>
 <header class="top">
   <button id="menuBtn" class="btn" type="button" aria-expanded="false" aria-controls="lessons">Lessons</button>
-  <a class="mark" href="learn.html"><span class="mark-steno" aria-hidden="true"></span><span class="mark-word">Duployé</span><span class="mark-sub">Leçons</span></a>
+  <a class="mark" href="learn.html"><span class="mark-steno" aria-hidden="true">&#x1BC08;&#x1BC51;&#x1BC02;&#x1BC06;&#x1BC44;&#x1BC46;&#x1BC47;</span><span class="mark-word">Duployé</span><span class="mark-sub">Leçons</span></a>
   <span class="grow"></span>
   <a class="btn" href="./"><span class="btn-long">Open the canvas</span><span class="btn-short">Canvas</span></a>
 </header>

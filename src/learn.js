@@ -37,6 +37,7 @@ function fitAlphabet() {
 addEventListener('resize', fitAlphabet);
 
 function renderNav(currentId) {
+  if (nav.childElementCount) nav.classList.add('settled'); // fade the list in once, not on every refresh
   const done = new Set(store.get('duploye.lessons.seen', []));
   const groups = [...new Set(index.map((l) => l.course))];
   nav.innerHTML = groups.map((course) => `<h2>${esc(course)}</h2><ol>${index.filter((l) => l.course === course).map((l) => l.soon
@@ -72,6 +73,7 @@ async function show() {
     url = `lessons/${entry.file}`;
   }
   renderNav(entry?.id);
+  article.classList.remove('ready');
   article.innerHTML = '<p class="loading">Loading the lesson…</p>';
   try {
     const res = await fetch(url);
@@ -90,6 +92,7 @@ async function show() {
       store.set('duploye.lessons.seen', [...seen]);
       renderNav(entry.id);
     }
+    article.classList.add('ready');
     if (!entry) renderNav(null); // refresh the alphabet card for the notebook's language
     document.title = `${title} · Duployé Lessons`;
     if (!location.hash.startsWith('#s')) scrollTo({ top: 0 });
