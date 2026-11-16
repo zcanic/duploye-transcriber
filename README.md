@@ -109,7 +109,7 @@ Rebuild the English dictionary from a new CMUdict release with `python3 tools/bu
 | `src/duploye.js` | tokens → Unicode codepoints, sigles, sentence and elision rules |
 | `src/english.js` | English: CMU phones → Sloan-Duployan signs, word signs, spelling fallback |
 | `src/systems.js` | the two writing systems behind one interface |
-| `src/shaper.js` | HarfBuzz (WASM) shaping → positioned glyph outlines |
+| `src/shaper.js`, `src/shape-worker.js`, `src/shape-core.js` | HarfBuzz (WASM) shaping → positioned glyph outlines, in a Web Worker so pages never stall |
 | `src/sheet.js` | shared layout, SVG drawing and stroke-by-stroke ink |
 | `src/runtime.js` | loads the font and dictionaries once, from the module's own location |
 | `src/app.js`, `src/style.css`, `index.html` | the canvas |

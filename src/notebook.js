@@ -25,7 +25,7 @@
 // All text is escaped; only the Markdown subset above becomes markup.
 import { ready } from './runtime.js';
 import { SYSTEMS, parsePhonemes } from './systems.js';
-import { InkSheet, buildItems, keyItems, signSvg } from './sheet.js';
+import { InkSheet, buildItems, keyItems, signSvg, prepare, prepareSigns } from './sheet.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -168,9 +168,12 @@ function stenoCell(block, meta) {
   cell.append(bar, input, box, sounds);
 
   const sheet = new InkSheet(g, { unit: 0.05, width: () => Math.max(160, box.clientWidth - 36), gloss: () => o.gloss, maxInkMs: 4000 });
-  let shown = false;
-  const draw = (opts = {}) => {
+  let shown = false, drawSeq = 0;
+  const draw = async (opts = {}) => {
+    const n = ++drawSeq;
     const items = buildItems(input.value, sys, { useSigles: o.sigles });
+    await prepare(items, sys); // shaped in the worker
+    if (n !== drawSeq) return;
     sizeSvg(svg, sheet.set(items, sys, opts));
     if (o.sounds) {
       sounds.innerHTML = items.filter((i) => i.kind === 'word').map((i) =>
@@ -208,10 +211,14 @@ function signsCell(block, meta) {
     r.innerHTML = row.split(/\s+/).map((t) => {
       if (!sys.tokens.includes(t)) return `<span class="nb-sign bad" title="Unknown sign">${esc(t)}?</span>`;
       const hint = sys.hints[t];
-      return `<span class="nb-sign">${signSvg(sys, t)}<b>${esc(t)}</b>${hint ? `<small>${esc(hint)}</small>` : ''}</span>`;
+      return `<span class="nb-sign"><span class="glyph" data-sign="${esc(t)}"></span><b>${esc(t)}</b>${hint ? `<small>${esc(hint)}</small>` : ''}</span>`;
     }).join('');
     cell.append(r);
   }
+  const tokens = [...cell.querySelectorAll('[data-sign]')].map((x) => x.dataset.sign);
+  prepareSigns(sys, tokens).then(() => {
+    for (const x of cell.querySelectorAll('[data-sign]')) x.outerHTML = signSvg(sys, x.dataset.sign);
+  });
   return cell;
 }
 
@@ -253,6 +260,7 @@ function drillCell(block, meta, mode) {
     btn.type = 'button';
     btn.className = 'nb-btn';
     const items = itemsFor(e);
+    const shaped = prepare(items, sys); // start shaping now; reveal waits for it
     const tokens = items.filter((i) => i.kind === 'word').map((i) => i.tokens.join(' ') + (i.sigle ? ' (sigle)' : '')).join(' · ');
     let open = false;
     if (mode === 'write') {
@@ -263,14 +271,14 @@ function drillCell(block, meta, mode) {
       label.textContent = '?';
       label.classList.add('hidden-word');
       btn.textContent = 'Show word';
-      onVisible(li, () => sizeSvg(svg, sheet.set(items, sys), 10, true));
+      onVisible(li, () => shaped.then(() => sizeSvg(svg, sheet.set(items, sys), 10, true)));
     }
     const reveal = () => {
       if (open) return;
       open = true;
       btn.hidden = true;
       li.classList.add('open');
-      if (mode === 'write') { box.hidden = false; sizeSvg(svg, sheet.set(items, sys), 10, true); }
+      if (mode === 'write') shaped.then(() => { box.hidden = false; sizeSvg(svg, sheet.set(items, sys), 10, true); });
       else { label.textContent = e.word; label.classList.remove('hidden-word'); }
       sounds.textContent = tokens;
     };

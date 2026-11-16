@@ -3,7 +3,7 @@
 import { renderNotebook, parse } from './notebook.js';
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
-import { signSvg } from './sheet.js';
+import { signSvg, prepareSigns } from './sheet.js';
 
 const $ = (id) => document.getElementById(id);
 const store = {
@@ -52,9 +52,13 @@ function syncNav(currentId, lang = cardLang || 'fr') {
     a.querySelector('.done').hidden = !done.has(a.dataset.id);
   }
   if (cardLang !== lang) {
-    nav.querySelector('.alpha')?.remove();
-    nav.append(alphabetCard(lang));
     cardLang = lang;
+    prepareSigns(SYSTEMS[lang]).then(() => { // signs are shaped in the worker
+      if (cardLang !== lang) return;
+      nav.querySelector('.alpha')?.remove();
+      nav.append(alphabetCard(lang));
+      fitAlphabet();
+    });
   }
   fitAlphabet();
 }

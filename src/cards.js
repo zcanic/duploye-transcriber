@@ -3,7 +3,7 @@
 // swipe right for "remembered", left for "again".
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
-import { InkSheet, buildItems } from './sheet.js';
+import { InkSheet, buildItems, prepare } from './sheet.js';
 import { parseDeck, grade, buildSession, stats, streak } from './deck.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -89,6 +89,9 @@ function say(text, force = false) {
 }
 
 // ---------- a card ----------
+const itemsOf = (card) => buildItems(card.fr.replace(/,/g, ' '), sys, { useSigles: false });
+// shape a few cards ahead in the worker, so the next card is ready when it rises
+const prepareCards = (cards) => Promise.all(cards.map((c) => prepare(itemsOf(c), sys)));
 const posClass = (pos) => (/n\.m/.test(pos) ? 'm' : /n\.f/.test(pos) ? 'f' : '');
 const sayBtn = '<button type="button" class="icon-btn say" data-say aria-label="Read aloud"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8h3l4-3v10l-4-3H4z"/><path class="wave" d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9"/></svg></button>';
 
@@ -115,7 +118,7 @@ function makeCard(card) {
   svg.append(g);
   el.querySelector('.ink-slot').replaceWith(svg);
   const sheet = new InkSheet(g, { unit: 0.06, width: () => Math.min(340, innerWidth - 90), gloss: () => false, maxInkMs: 1500 });
-  const items = buildItems(card.fr.replace(/,/g, ' '), sys, { useSigles: false });
+  const items = itemsOf(card);
   const size = sheet.set(items, sys, { ink: false });
   const pad = 14, w = size.used + pad * 2, h = size.h + pad * 2;
   svg.setAttribute('viewBox', `${-pad} ${-pad} ${w} ${h}`);
@@ -157,9 +160,13 @@ function updateMeter() {
   stage.querySelector('.g2').style.opacity = left > 2 ? '' : '0';
 }
 
-function showNext(first = false) {
-  if (session.i >= session.queue.length) { current = null; updateMeter(); showSummary(false); return; }
-  const c = makeCard(session.queue[session.i]);
+async function showNext(first = false) {
+  const sess = session, at = session.i;
+  if (sess.i >= sess.queue.length) { current = null; updateMeter(); showSummary(false); return; }
+  await prepareCards(sess.queue.slice(at, at + 1));
+  if (session !== sess || sess.i !== at || current) return; // the session moved on meanwhile
+  prepareCards(sess.queue.slice(at + 1, at + 4)); // look ahead, in the background
+  const c = makeCard(sess.queue[at]);
   const below = stage.querySelector('.card');
   if (below) stage.insertBefore(c.el, below); else stage.append(c.el);
   current = c;

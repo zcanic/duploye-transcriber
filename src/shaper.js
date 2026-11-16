@@ -1,32 +1,75 @@
 // HarfBuzz shaping of Duployan text into positioned glyph outlines.
-// The Noto Sans Duployan font does the hard part (cursive joins, vowel
-// orientation); we only collect the visible glyphs and their pen positions.
-import * as hb from '../vendor/harfbuzzjs/index.mjs';
+//
+// Shaping happens in a worker (src/shape-worker.js) so the main thread never
+// stalls: call `await prefetch(texts)` before drawing, then `shape(text)` reads
+// the cached result synchronously. If workers are unavailable, or a text was not
+// prefetched, shaping falls back to the main thread.
+import { makeShaper } from './shape-core.js';
 
-let font = null;
-const cache = new Map();
+const cache = new Map();     // text -> {glyphs, box}
+const inflight = new Map();  // text -> Promise
+let fontUrl = null;
+let worker = null, workerReady = null, seq = 0;
+const waiting = new Map();   // message id -> resolve
+let mainShaper = null, mainShaperPromise = null;
 
 export async function loadFont(url) {
-  const buf = await (await fetch(url)).arrayBuffer();
-  font = new hb.Font(new hb.Face(new hb.Blob(buf)));
-}
-
-// Bounding box from the absolute coordinates HarfBuzz emits (control points
-// included, which is a safe over-estimate).
-function pathBox(d) {
-  const nums = d.match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/g);
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  if (!nums) return null;
-  for (let i = 0; i + 1 < nums.length; i += 2) {
-    const x = +nums[i], y = +nums[i + 1];
-    if (x < x0) x0 = x; if (x > x1) x1 = x;
-    if (y < y0) y0 = y; if (y > y1) y1 = y;
+  fontUrl = url;
+  if (typeof Worker === 'function' && !worker) {
+    try {
+      worker = new Worker(new URL('./shape-worker.js', import.meta.url), { type: 'module' });
+      workerReady = new Promise((resolve, reject) => {
+        worker.onmessage = (e) => {
+          const m = e.data;
+          if (m.type === 'ready') resolve();
+          else if (m.type === 'error') reject(new Error(m.message));
+          else if (m.type === 'shaped') {
+            for (const [t, r] of m.out) cache.set(t, r);
+            waiting.get(m.id)?.();
+            waiting.delete(m.id);
+          }
+        };
+        worker.onerror = (err) => reject(err);
+      });
+      worker.postMessage({ type: 'init', url });
+      // never hang: if the worker does not come up, shape on the main thread instead
+      await Promise.race([workerReady, new Promise((_, reject) => setTimeout(() => reject(new Error('worker timeout')), 8000))]);
+      return;
+    } catch (err) {
+      console.warn('Shaping worker unavailable, shaping on the main thread.', err);
+      worker?.terminate();
+      worker = null;
+    }
   }
-  return { x0, y0, x1, y1 };
+  await ensureMainShaper();
 }
 
-// Round long float coordinates: smaller DOM, same look at any zoom.
-const tidy = (d) => d.replace(/-?\d+\.\d+/g, (n) => (+n).toFixed(1));
+function ensureMainShaper() {
+  mainShaperPromise ||= (async () => {
+    const hb = await import('../vendor/harfbuzzjs/index.mjs');
+    const buf = await (await fetch(fontUrl)).arrayBuffer();
+    mainShaper = makeShaper(hb, new hb.Font(new hb.Face(new hb.Blob(buf))));
+  })();
+  return mainShaperPromise;
+}
+
+/** Shape these texts in the background; resolves once all are cached. */
+export function prefetch(texts) {
+  const want = [...new Set(texts)].filter((t) => typeof t === 'string');
+  const missing = want.filter((t) => !cache.has(t) && !inflight.has(t));
+  if (missing.length) {
+    let p;
+    if (worker) {
+      const id = ++seq;
+      p = new Promise((resolve) => waiting.set(id, resolve));
+      worker.postMessage({ type: 'shape', id, texts: missing });
+    } else {
+      p = ensureMainShaper().then(() => { for (const t of missing) cache.set(t, mainShaper(t)); });
+    }
+    for (const t of missing) inflight.set(t, p.finally(() => inflight.delete(t)));
+  }
+  return Promise.all(want.map((t) => inflight.get(t)).filter(Boolean)).then(() => {});
+}
 
 /**
  * Shape a Duployan string. Returns glyphs in writing order, in font units
@@ -34,33 +77,10 @@ const tidy = (d) => d.replace(/-?\d+\.\d+/g, (n) => (+n).toFixed(1));
  * @returns {{glyphs: {d:string,x:number,y:number,box:object,len:number}[], box: object}}
  */
 export function shape(text) {
-  if (!font) throw new Error('font not loaded');
   const hit = cache.get(text);
   if (hit) return hit;
-  const buffer = new hb.Buffer();
-  buffer.addText(text);
-  buffer.guessSegmentProperties();
-  hb.shape(font, buffer);
-  const out = [];
-  let px = 0, py = 0;
-  let X0 = 0, Y0 = 0, X1 = 0, Y1 = 0, first = true;
-  for (const g of buffer.getGlyphInfosAndPositions()) {
-    const d = font.glyphToPath(g.codepoint);
-    if (d) {
-      const x = px + (g.xOffset || 0), y = py + (g.yOffset || 0);
-      const b = pathBox(d);
-      if (b) {
-        const box = { x0: b.x0 + x, y0: b.y0 + y, x1: b.x1 + x, y1: b.y1 + y };
-        if (first) { X0 = box.x0; Y0 = box.y0; X1 = box.x1; Y1 = box.y1; first = false; }
-        else { X0 = Math.min(X0, box.x0); Y0 = Math.min(Y0, box.y0); X1 = Math.max(X1, box.x1); Y1 = Math.max(Y1, box.y1); }
-        out.push({ d: tidy(d), x, y, box: b, len: Math.hypot(b.x1 - b.x0, b.y1 - b.y0) });
-      }
-    }
-    px += g.xAdvance || 0;
-    py += g.yAdvance || 0;
-  }
-  buffer.destroy?.();
-  const res = { glyphs: out, box: { x0: Math.min(X0, 0), y0: Math.min(Y0, 0), x1: Math.max(X1, 0), y1: Math.max(Y1, 0) } };
-  cache.set(text, res);
-  return res;
+  if (!mainShaper) throw new Error(`"${text}" was not prefetched; call prefetch() before drawing.`);
+  const r = mainShaper(text);
+  cache.set(text, r);
+  return r;
 }

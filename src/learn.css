@@ -16,8 +16,7 @@ button, textarea { font: inherit; color: inherit; }
   view-transition-name: topbar; /* stays still while lessons swap underneath */
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; align-items: center; gap: 14px;
   padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  background: color-mix(in oklab, var(--paper) 88%, transparent); border-bottom: 1px solid var(--line);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  background: var(--paper); border-bottom: 1px solid var(--line);
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
 .top .mark { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); }
@@ -53,7 +52,7 @@ nav.lessons .soon:hover { background: none; }
 .alpha-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin: 0 0 8px; }
 .alpha-sign { display: grid; justify-items: center; padding: 2px 0 3px; border-radius: 7px; line-height: 1; }
 .alpha-sign:hover { background: var(--chip); }
-.alpha-sign .glyph { width: 28px; height: 26px; }
+.alpha-sign .glyph { display: block; width: 28px; height: 26px; }
 .alpha-sign .glyph path { fill: var(--ink); }
 .alpha-sign b { font: 500 10px var(--f-mono); color: var(--muted); margin-top: 1px; }
 
@@ -112,7 +111,7 @@ pre { background: var(--chip); padding: 12px 14px; border-radius: 10px; overflow
 .nb-signs { padding: 10px; display: grid; gap: 6px; }
 .nb-signrow { display: flex; flex-wrap: wrap; gap: 6px; }
 .nb-sign { display: grid; justify-items: center; align-content: center; width: 74px; min-height: 84px; padding: 6px 4px; border-radius: 10px; background: var(--chip); line-height: 1.2; text-align: center; }
-.nb-sign .glyph { width: 40px; height: 40px; }
+.nb-sign .glyph { display: block; width: 40px; height: 40px; }
 .nb-sign .glyph path { fill: var(--ink); }
 .nb-sign b { font: 500 13px var(--f-mono); margin-top: 2px; }
 .nb-sign small { font-size: 10.5px; color: var(--muted); margin-top: 1px; }

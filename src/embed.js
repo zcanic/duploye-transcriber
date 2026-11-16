@@ -15,7 +15,7 @@
 // Methods: el.replay() writes it again.
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
-import { InkSheet, buildItems } from './sheet.js';
+import { InkSheet, buildItems, prepare } from './sheet.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const CSS = `
@@ -73,6 +73,9 @@ class DuployeText extends HTMLElement {
       this.sheet = new InkSheet(this.g, { unit: size / 1000, width, gloss: () => this.hasAttribute('gloss'), maxInkMs: 4000 });
     }
     const items = buildItems(text, sys, { useSigles: !this.hasAttribute('nosigles') });
+    const n = (this.renderSeq = (this.renderSeq || 0) + 1);
+    await prepare(items, sys); // shaped in a worker, off the main thread
+    if (n !== this.renderSeq) return;
     const animate = this.firstInk && !this.hasAttribute('static');
     // after the first writing, edits ink only the words that changed
     const s = this.sheet.set(items, sys, { ink: !animate && !this.hasAttribute('static') && !!this.rendered });

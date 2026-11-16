@@ -1,7 +1,7 @@
 // A sheet of shorthand: turns text into laid-out words, draws them as SVG
 // glyph outlines and inks new words stroke by stroke. Used by the canvas
 // (index.html) and by every live cell of the lessons (learn.html).
-import { shape } from './shaper.js';
+import { shape, prefetch } from './shaper.js';
 import { parsePhonemes } from './systems.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -66,6 +66,11 @@ export function keyItems(items) {
   }
   return items;
 }
+
+/** Shape the words of these items in the background (call before InkSheet.set). */
+export const prepare = (items, sys) => prefetch(items.filter((i) => i.kind === 'word').map((i) => sys.toDuployan(i.tokens)));
+/** Shape single signs in the background (call before signSvg). */
+export const prepareSigns = (sys, tokens = sys.tokens) => prefetch(tokens.map((t) => sys.toDuployan([t])));
 
 const mctx = document.createElement('canvas').getContext('2d');
 const textW = (s, font) => { mctx.font = font; return mctx.measureText(s).width; };

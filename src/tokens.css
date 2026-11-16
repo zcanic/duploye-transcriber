@@ -6,7 +6,7 @@
   --accent: #2743b8;       /* Sergent-Major blue: selection, focus */
   --muted: #7b8193;
   --line: #e4e7ee;
-  --panel: #ffffffee;
+  --panel: #ffffff;
   --chip: #f2f4f8;
   --shadow: 0 1px 2px #1b24400d, 0 8px 28px #1b24401a;
   --f-ui: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -18,13 +18,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --paper: #111318; --dot: #2a2f3b; --ink: #e2e8f6; --accent: #93a8ff; --muted: #8b91a2;
-    --line: #262a34; --panel: #1a1d24ee; --chip: #232733; --shadow: 0 1px 2px #0006, 0 8px 28px #0008;
+    --line: #262a34; --panel: #1a1d24; --chip: #232733; --shadow: 0 1px 2px #0006, 0 8px 28px #0008;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --paper: #111318; --dot: #2a2f3b; --ink: #e2e8f6; --accent: #93a8ff; --muted: #8b91a2;
-  --line: #262a34; --panel: #1a1d24ee; --chip: #232733; --shadow: 0 1px 2px #0006, 0 8px 28px #0008;
+  --line: #262a34; --panel: #1a1d24; --chip: #232733; --shadow: 0 1px 2px #0006, 0 8px 28px #0008;
   color-scheme: dark;
 }
 

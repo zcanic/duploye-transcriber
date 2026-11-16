@@ -1,6 +1,6 @@
 import { SYSTEMS, parsePhonemes } from './systems.js';
 import { loadFont } from './shaper.js';
-import { InkSheet, buildItems, signSvg } from './sheet.js';
+import { InkSheet, buildItems, signSvg, prepare, prepareSigns } from './sheet.js';
 
 // ---------- constants ----------
 const NS = 'http://www.w3.org/2000/svg';
@@ -43,9 +43,15 @@ const langOverrides = () => {
 };
 
 // ---------- update cycle ----------
-function update({ inkAll = false } = {}) {
-  const items = buildItems(state.text, sys(), { useSigles: state.sigles, overrides: langOverrides() });
-  content = sheet.set(items, sys(), { inkAll });
+// Shaping runs in a worker; only the newest request draws.
+let updateSeq = 0;
+async function update({ inkAll = false } = {}) {
+  const n = ++updateSeq;
+  const system = sys();
+  const items = buildItems(state.text, system, { useSigles: state.sigles, overrides: langOverrides() });
+  await prepare(items, system);
+  if (n !== updateSeq) return;
+  content = sheet.set(items, system, { inkAll });
   model = items;
   syncSelection();
   const words = items.filter((i) => i.kind === 'word');
@@ -366,9 +372,9 @@ async function setLang(lang) {
   $('palette').replaceChildren();
   stopInk();
   if (!(await loadSystem())) return;
-  await window.__pageReveal; // let the page transition finish before shaping and inking
+  await prepareSigns(sys());
   buildLegend();
-  update({ inkAll: true });
+  await update({ inkAll: true });
   fit();
 }
 function syncLangUI() {
@@ -424,8 +430,8 @@ let resizeT = 0;
 let lastPageW = pageWidth();
 addEventListener('resize', () => {
   clearTimeout(resizeT);
-  resizeT = setTimeout(() => {
-    if (pageWidth() !== lastPageW) { lastPageW = pageWidth(); update(); }
+  resizeT = setTimeout(async () => {
+    if (pageWidth() !== lastPageW) { lastPageW = pageWidth(); await update(); }
     syncDock();
     fit(false);
   }, 120);
@@ -447,8 +453,10 @@ async function boot() {
     return;
   }
   if (!(await loadSystem())) return;
+  await window.__pageReveal; // let the page cross-fade finish first
+  await prepareSigns(sys());
   buildLegend();
-  update({ inkAll: true });
+  await update({ inkAll: true });
   fit(false);
 }
 boot();

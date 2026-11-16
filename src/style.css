@@ -39,7 +39,6 @@ button, textarea { font: inherit; color: inherit; }
 .float {
   position: fixed; z-index: 5; background: var(--panel); border: 1px solid var(--line);
   border-radius: 14px; box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2);
 }
 #bar {
   top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px));
