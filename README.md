@@ -4,7 +4,7 @@ Type French or English and watch it written in **Duployé shorthand**: the origi
 
 As far as I could find, no other tool converts text to Duployé. This one runs entirely in the browser, with no build step.
 
-**Live:** [canvas](https://zcanic.github.io/duploye-transcriber/) · [lessons](https://zcanic.github.io/duploye-transcriber/learn.html) · [embed](https://zcanic.github.io/duploye-transcriber/embed.html)
+**Live:** [canvas](https://zcanic.github.io/duploye-transcriber/) · [lessons](https://zcanic.github.io/duploye-transcriber/learn.html) · [cards](https://zcanic.github.io/duploye-transcriber/cards.html) · [embed](https://zcanic.github.io/duploye-transcriber/embed.html)
 
 ```
 French text ──► sounds (rule-based, editable) ──► Unicode Duployan ──► HarfBuzz + Noto Sans Duployan ──► SVG outlines, inked stroke by stroke
@@ -58,6 +58,12 @@ coke                   ← shorthand shown, word hidden
 
 The built-in course lives in [`lessons/`](lessons/) and is listed in `lessons/index.json`. To read your own notebook, host the `.md` file anywhere that allows cross-origin requests (a GitHub raw URL works), then open `learn.html?src=<its URL>`. Everything in a notebook is escaped; only the Markdown subset above becomes markup.
 
+## Cards: vocabulary in shorthand
+
+[`cards.html`](https://zcanic.github.io/duploye-transcriber/cards.html) is a flashcard deck of French words grouped by topic. The front writes the word in Duployé, stroke by stroke, with the Chinese meaning (or the French word); the back shows the other side, the part of speech, the English gloss and the sounds. Tap to flip, swipe right for *remembered* and left for *again* (or use ← Space →). Cards come back on a Leitner schedule (1, 3, 7, 14, 30 days); progress stays in your browser. French is read aloud when the browser has a French voice.
+
+Import your own deck with **导入词汇**: Markdown files with one word per line, `- maison | n.f. | house | 房子`. `tools/build-vocab.mjs` turns a folder of such files into the built-in deck.
+
 ## Embed: `<duploye-text>`
 
 Add shorthand to any page with one script and one tag. See [`embed.html`](https://zcanic.github.io/duploye-transcriber/embed.html) for live examples.
@@ -90,6 +96,7 @@ Tests (word examples from the manual):
 ```bash
 node test/test.mjs      # French
 node test/test-en.mjs   # English
+node test/test-deck.mjs # flashcard decks and scheduling
 ```
 
 Rebuild the English dictionary from a new CMUdict release with `python3 tools/build-cmudict.py cmudict.dict`.
@@ -108,6 +115,8 @@ Rebuild the English dictionary from a new CMUdict release with `python3 tools/bu
 | `src/app.js`, `src/style.css`, `index.html` | the canvas |
 | `src/notebook.js`, `src/learn.js`, `src/learn.css`, `learn.html` | the notebook format and the lessons page |
 | `src/embed.js`, `embed.html` | the `<duploye-text>` web component |
+| `src/deck.js`, `src/cards.js`, `src/cards.css`, `cards.html` | flashcards: deck parsing, Leitner scheduling, the card UI |
+| `data/vocab-fr.json` | the built-in vocabulary deck |
 | `lessons/` | the built-in course (Chinese, French Duployé) |
 | `src/tokens.css` | shared colors and type |
 | `vendor/harfbuzzjs/` | [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 (MIT) |

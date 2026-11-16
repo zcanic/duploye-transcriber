@@ -178,10 +178,10 @@ export class InkSheet {
     return this.size;
   }
 
-  /** Re-ink every word from scratch. */
-  replay() {
+  /** Re-ink every word from scratch, optionally after a delay (words stay hidden meanwhile). */
+  replay(delay = 0) {
     this.stop();
-    this.ink(this.items.filter((i) => i.kind === 'word').map((i) => [i.node, i]));
+    this.ink(this.items.filter((i) => i.kind === 'word').map((i) => [i.node, i]), delay);
   }
 
   stop() {
@@ -192,7 +192,7 @@ export class InkSheet {
   // Each glyph is revealed by a wide white stroke running along its own outline
   // inside a mask. Outlines start at the pen's entry point, so the reveal follows
   // the direction of writing. Masks are removed as soon as a glyph is finished.
-  ink(queue) {
+  ink(queue, delay = 0) {
     if (reduceMotion.matches || !queue.length) return;
     const plan = [];
     let total = 0;
@@ -206,7 +206,7 @@ export class InkSheet {
       total += 70; // pen lift between words
     }
     const speed = Math.min(1, (this.opts.maxInkMs ?? 5000) / Math.max(total, 1));
-    let t = 40, lastG = null;
+    let t = 40 + delay, lastG = null;
     for (const p of plan) {
       if (lastG && lastG !== p.g) t += 70 * speed;
       lastG = p.g;

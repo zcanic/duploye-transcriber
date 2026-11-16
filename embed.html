@@ -18,7 +18,7 @@
   // Tell the page transition which way we are going (canvas <-> lessons), before the first frame.
   addEventListener('pagereveal', (e) => {
     if (!e.viewTransition) return;
-    e.viewTransition.types.add(/learn\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
+    e.viewTransition.types.add(/(learn|cards)\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
     window.__pageReveal = e.viewTransition.finished.catch(() => {}); // heavy work waits for this
   });
 </script>

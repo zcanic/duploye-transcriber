@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duployé Cards</title>
+<meta name="description" content="Vocabulary flashcards written in Duployé shorthand, with spaced repetition.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=fallback">
+<link rel="preload" href="fonts/NotoSansDuployan-Regular.ttf" as="fetch" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="src/cards.css">
+<script>
+  // Tell the page transition which way we are going, before the first frame.
+  addEventListener('pagereveal', (e) => {
+    if (!e.viewTransition) return;
+    e.viewTransition.types.add('to-lessons');
+    window.__pageReveal = e.viewTransition.finished.catch(() => {}); // heavy work waits for this
+  });
+</script>
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="./" aria-label="Duployé canvas"><svg class="mark-steno" viewBox="-40 -684 2325 945.8689270019531" aria-hidden="true"><g transform="scale(1,-1)" fill="currentColor"><path d="M85,35C85,16 101,0 120,0L1120,0C1139,0 1155,16 1155,35C1155,54 1139,70 1120,70L120,70C101,70 85,54 85,35Z" transform="translate(0,0)"/><path d="M85,35C85,16 101,0 120,0C305,0 455,150 455,335C455,354 439,370 420,370C401,370 385,354 385,335C385,189 266,70 120,70C101,70 85,54 85,35Z" transform="translate(1000,0)"/><path d="M85,35C85,16 101,0 120,0C139,0 155,16 155,35L155,535C155,554 139,570 120,570C101,570 85,554 85,535L85,35Z" transform="translate(1300,-200)"/><path d="M145,10L645,510C677.1,542.1 626.9,591.9 595,560L95,60C62.9,27.9 113.1,-21.9 145,10Z" transform="translate(1300,-200)"/><path d="M139,116L245,10C277.1,-22.1 326.9,28.1 295,60L189,166C144,211 144,283 189,328C234,373 306,373 351,328C396,283 396,211 351,166C318.9,133.9 369.1,84.1 401,116C473,188 473,306 401,378C329,450 211,450 139,378C67,306 67,188 139,116Z" transform="translate(1544,194)"/><path d="M95,110L166,40C219,-13 304,-13 357,40C389.0,72.0 338.4,120.4 307,89C282,64 240,64 215,89L145,160C112.9,192.1 63.1,141.9 95,110Z" transform="translate(1694,94)"/><path d="M145,152C170,177 212,177 237,152C262,127 262,85 237,60C205.4,28.4 254.2,-21.8 286,10C339,63 339,148 286,201C233,254 148,254 95,201C63.0,169.0 113.6,120.6 145,152Z" transform="translate(1906,-18)"/></g></svg><span class="mark-word">Duployé</span></a><span class="mark-sub">Cartes</span>
+  <span class="grow"></span>
+  <div class="seg" role="group" aria-label="Card front">
+    <button type="button" class="seg-btn" data-mode="zh" aria-pressed="true" title="Front: shorthand and Chinese. Back: French.">看中文</button>
+    <button type="button" class="seg-btn" data-mode="fr" aria-pressed="false" title="Front: shorthand and French. Back: Chinese.">看法语</button>
+  </div>
+  <button type="button" id="speakToggle" class="icon-btn" aria-pressed="true" title="Read French aloud (S)">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8h3l4-3v10l-4-3H4z"/><path class="wave" d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9"/></svg>
+  </button>
+  <nav class="links" aria-label="Pages"><a href="learn.html">Lessons</a><a href="./">Canvas</a></nav>
+</header>
+
+<main class="room">
+  <div class="topics" id="topics" role="tablist" aria-label="Topics"></div>
+
+  <div class="meter" aria-live="polite">
+    <div class="bar"><span id="barFill"></span></div>
+    <span id="count" class="count">0 / 0</span>
+  </div>
+
+  <section class="stage" id="stage" aria-label="Flashcards">
+    <div class="ghost g2" aria-hidden="true"></div>
+    <div class="ghost g1" aria-hidden="true"></div>
+  </section>
+
+  <div class="controls" id="controls">
+    <button type="button" class="ctl again" id="againBtn"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 6l8 8M14 6l-8 8"/></svg><span>没记住</span><kbd>←</kbd></button>
+    <button type="button" class="ctl flip" id="flipBtn"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10a6 6 0 0 1 10.2-4.2L16 7.5M16 4v3.5h-3.5M16 10a6 6 0 0 1-10.2 4.2L4 12.5M4 16v-3.5h3.5"/></svg><span>翻面</span><kbd>空格</kbd></button>
+    <button type="button" class="ctl good" id="goodBtn"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10.5l3.2 3.2L15 6.5"/></svg><span>记住了</span><kbd>→</kbd></button>
+  </div>
+
+  <footer class="foot">
+    <span id="streak"></span>
+    <span class="grow"></span>
+    <button type="button" class="link-btn" id="importBtn">导入词汇</button>
+    <input type="file" id="importFiles" accept=".md,.markdown,.txt" multiple hidden>
+  </footer>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="src/cards.js"></script>
+</body>
+</html>
