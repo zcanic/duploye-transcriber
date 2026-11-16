@@ -1,5 +1,6 @@
-import { transcribe, toDuployan, parsePhonemes } from './duploye.js';
+import { SYSTEMS, parsePhonemes } from './systems.js';
 import { wordToPhonemes } from './g2p.js';
+import { toDuployan as frDuployan } from './duploye.js';
 import { loadFont, shape } from './shaper.js';
 
 // ---------- constants ----------
@@ -9,16 +10,6 @@ const pageWidth = () => (innerWidth < 640 ? 540 : 960); // writing width, world 
 const WORD_GAP = 30, SEP_GAP = 22, LINE_GAP = 44, GLOSS_GAP = 20;
 const GRID = 24;               // dot spacing at 100 %
 const MASK_W = 210;            // reveal brush width, font units (> stroke weight)
-const SAMPLE = "La loi donne à l'avocat l'arme qu'il faut pour chaque cas. Lorsque la cause est bonne et en accord avec le code, il l'adopte et la gagne.";
-const GROUPS = [
-  ['Lines', ['P', 'B', 'T', 'D', 'F', 'V', 'K', 'G', 'L', 'R']],
-  ['Half circles', ['M', 'N', 'GN', 'S', 'Z', 'J', 'CH']],
-  ['Vowels', ['a', 'o', 'ou', 'é', 'i', 'u', 'eu']],
-  ['Nasals', ['an', 'in', 'on', 'un']],
-];
-const HINT = { a: 'a', o: 'o au eau', ou: 'ou', 'é': 'é è ai', i: 'i y', u: 'u', eu: 'eu œ', an: 'an en', in: 'in ain', on: 'on', un: 'un',
-  K: 'c qu', S: 's ç', Z: 'z', J: 'j ge', CH: 'ch', GN: 'gn', R: 'r', L: 'l' };
-
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const $ = (id) => document.getElementById(id);
 const store = {
@@ -35,9 +26,12 @@ const el = (tag, attrs = {}, text) => {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- state ----------
+const LANG0 = store.get('duploye.lang', 'fr') === 'en' ? 'en' : 'fr';
+const textKey = (lang) => `duploye.v2.text.${lang}`;
 const state = {
-  text: store.get('duploye.v2.text', SAMPLE),
-  overrides: store.get('duploye.overrides', {}),
+  lang: LANG0,
+  text: store.get(textKey(LANG0), LANG0 === 'fr' ? store.get('duploye.v2.text', SYSTEMS.fr.sample) : SYSTEMS.en.sample),
+  overrides: Object.fromEntries(Object.entries(store.get('duploye.overrides', {})).map(([k, v]) => [k.includes(':') ? k : `fr:${k}`, v])),
   gloss: store.get('duploye.gloss', true),
   sigles: store.get('duploye.sigles', true),
   sel: null,                    // { text: lowercased, n: occurrence }
@@ -48,19 +42,22 @@ let nodes = new Map();          // key -> <g>
 let content = { w: 960, h: 100 };
 
 const stage = $('stage'), world = $('world'), ink = $('ink');
+const sys = () => SYSTEMS[state.lang];
+const toDuployan = (tokens) => sys().toDuployan(tokens);
+const overrideKey = (word) => `${state.lang}:${word.toLowerCase()}`;
 
 // ---------- model ----------
 function withOverride(raw) {
-  const k = raw.text.toLowerCase();
+  const k = overrideKey(raw.text);
   if (!raw.sigle && !raw.elided && !raw.number && state.overrides[k] !== undefined) {
-    return { ...raw, tokens: parsePhonemes(state.overrides[k]).tokens, edited: true };
+    return { ...raw, tokens: parsePhonemes(state.overrides[k], sys()).tokens, edited: true, guessed: false };
   }
   return raw;
 }
 
 function buildItems() {
   const items = [];
-  transcribe(state.text, { useSigles: state.sigles }).forEach((sent, si) => {
+  sys().transcribe(state.text, { useSigles: state.sigles }).forEach((sent, si) => {
     if (si) items.push({ kind: 'sep', text: '×' });
     let pending = null;
     for (const raw of sent.map(withOverride)) {
@@ -71,6 +68,7 @@ function buildItems() {
       g.tokens = g.tokens.concat(raw.tokens);
       g.proper ||= !!raw.properNoun;
       g.edited ||= !!raw.edited;
+      g.guessed ||= !!raw.guessed;
       if (raw.joinToNext) pending = g; else { items.push(g); pending = null; }
     }
     if (pending) items.push(pending);
@@ -375,7 +373,11 @@ function syncSelection(opening = false) {
   $('drawerHint').textContent = `Tap a sign to add it to “${it.text}”.`;
   const part = editablePart(it);
   $('inspWord').textContent = it.text;
-  $('inspNote').textContent = !part ? 'Abbreviation (sigle): a fixed sign.' : it.edited ? 'Sounds edited by you.' : 'Sounds guessed from spelling. Tap a sound to remove it.';
+  $('inspNote').textContent = !part ? 'Word sign (sigle): a fixed abbreviation.'
+    : it.edited ? 'Sounds edited by you.'
+    : state.lang === 'en' && !it.guessed ? 'Sounds from the CMU dictionary. Tap a sound to remove it.'
+    : state.lang === 'en' ? 'Not in the dictionary, so guessed from spelling. Check it.'
+    : 'Sounds guessed from spelling. Tap a sound to remove it.';
   $('inspReset').hidden = !it.edited;
   $('inspAdd').hidden = !part;
   const chips = [];
@@ -434,7 +436,7 @@ function editTokens(fn) {
   const part = editablePart(it);
   if (!part) return;
   const tokens = fn([...part.tokens]);
-  state.overrides[part.text.toLowerCase()] = tokens.join(' ');
+  state.overrides[overrideKey(part.text)] = tokens.join(' ');
   store.set('duploye.overrides', state.overrides);
   update();
 }
@@ -448,7 +450,7 @@ $('inspAdd').addEventListener('click', () => {
   p.hidden = !p.hidden;
   $('inspAdd').setAttribute('aria-expanded', String(!p.hidden));
   if (!p.hidden && !p.childElementCount) {
-    p.innerHTML = GROUPS.flatMap(([, ts]) => ts).map((t) => `<button type="button" class="chip" data-add="${esc(t)}" title="Add ${esc(t)}">${glyphSvg(t)}<span>${esc(t)}</span></button>`).join('');
+    p.innerHTML = sys().groups.flatMap(([, ts]) => ts).map((t) => `<button type="button" class="chip" data-add="${esc(t)}" title="Add ${esc(t)}">${glyphSvg(t)}<span>${esc(t)}</span></button>`).join('');
   }
   positionInspector();
 });
@@ -459,7 +461,7 @@ $('palette').addEventListener('click', (e) => {
 $('inspReset').addEventListener('click', () => {
   const part = editablePart(selectedItem());
   if (!part) return;
-  delete state.overrides[part.text.toLowerCase()];
+  delete state.overrides[overrideKey(part.text)];
   store.set('duploye.overrides', state.overrides);
   update();
 });
@@ -469,20 +471,22 @@ const popLast = () => { const c = $('chips').querySelectorAll('.chip'); c[c.leng
 // ---------- mini glyphs (chips, legend) ----------
 const glyphCache = new Map();
 function glyphSvg(token) {
-  if (glyphCache.has(token)) return glyphCache.get(token);
+  const ck = `${state.lang}:${token}`;
+  if (glyphCache.has(ck)) return glyphCache.get(ck);
   // One shared scale for every sign, so a short P stays half the length of a long B.
   const s = shape(toDuployan([token]));
   const b = s.box, span = 1250;
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
   const paths = s.glyphs.map((g) => `<path d="${g.d}" transform="translate(${g.x},${g.y})"/>`).join('');
   const svg = `<svg class="glyph" viewBox="${cx - span / 2} ${-cy - span / 2} ${span} ${span}" aria-hidden="true"><g transform="scale(1,-1)">${paths}</g></svg>`;
-  glyphCache.set(token, svg);
+  glyphCache.set(ck, svg);
   return svg;
 }
 
 function buildLegend() {
-  $('legend').innerHTML = GROUPS.map(([name, ts]) =>
-    `<div class="grp">${name}</div>` + ts.map((t) => `<button type="button" class="chip" data-add="${esc(t)}" title="${esc(HINT[t] || t)}">${glyphSvg(t)}<span>${esc(t)}</span></button>`).join('')).join('');
+  const { groups, hints } = sys();
+  $('legend').innerHTML = groups.map(([name, ts]) =>
+    `<div class="grp">${name}</div>` + ts.map((t) => `<button type="button" class="chip" data-add="${esc(t)}" title="${esc(hints[t] || t)}">${glyphSvg(t)}<span>${esc(t)}</span></button>`).join('')).join('');
 }
 $('legend').addEventListener('click', (e) => {
   const b = e.target.closest('[data-add]');
@@ -541,6 +545,43 @@ $('export').addEventListener('click', () => {
   toast('Saved duploye.svg');
 });
 
+// language switch
+async function setLang(lang) {
+  if (lang === state.lang) return;
+  clearTimeout(typing);
+  store.set(textKey(state.lang), src.value);
+  state.lang = lang;
+  store.set('duploye.lang', lang);
+  syncLangUI();
+  state.text = store.get(textKey(lang), sys().sample);
+  src.value = state.text;
+  autosize();
+  select(null);
+  $('palette').replaceChildren();
+  stopInk();
+  if (!(await loadSystem())) return;
+  buildLegend();
+  update({ inkAll: true });
+  fit();
+}
+function syncLangUI() {
+  for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === state.lang));
+  src.placeholder = sys().placeholder;
+  document.documentElement.lang = state.lang;
+  $('sigles').title = state.lang === 'en' ? 'Use word signs' : 'Use abbreviations (sigles)';
+}
+async function loadSystem() {
+  const lang = state.lang;
+  $('status').textContent = lang === 'en' ? 'Loading the English dictionary…' : 'Loading…';
+  try { await sys().ready(); } catch (err) {
+    console.error(err);
+    $('status').textContent = 'Could not load the English dictionary. Check your connection and switch again.';
+    return false;
+  }
+  return lang === state.lang;
+}
+document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+
 // composer
 const src = $('src');
 const autosize = () => { src.style.height = 'auto'; src.style.height = `${src.scrollHeight}px`; syncDock(); };
@@ -550,7 +591,7 @@ src.addEventListener('input', () => {
   clearTimeout(typing);
   typing = setTimeout(() => {
     state.text = src.value;
-    store.set('duploye.v2.text', state.text);
+    store.set(textKey(state.lang), state.text);
     update();
   }, 160);
 });
@@ -587,6 +628,7 @@ addEventListener('resize', () => {
 async function boot() {
   src.value = state.text;
   autosize();
+  syncLangUI();
   setToggle('gloss', state.gloss);
   setToggle('sigles', state.sigles);
   $('status').textContent = 'Loading the pen…';
@@ -597,7 +639,8 @@ async function boot() {
     console.error(err);
     return;
   }
-  document.querySelector('.mark-steno').textContent = toDuployan(wordToPhonemes('Duployé'));
+  document.querySelector('.mark-steno').textContent = frDuployan(wordToPhonemes('Duployé'));
+  if (!(await loadSystem())) return;
   buildLegend();
   update({ inkAll: true });
   fit(false);

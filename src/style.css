@@ -91,6 +91,9 @@ button, textarea { font: inherit; color: inherit; }
 .tool:focus-visible, .chip:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .tool svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .tool svg .faint { opacity: .35; }
+.seg { display: inline-flex; gap: 2px; background: var(--chip); border-radius: 10px; padding: 2px; flex: none; }
+.seg .tool { height: 28px; padding: 0 9px; font: 600 12px var(--f-mono); letter-spacing: .04em; }
+.seg .tool[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px #1b24401f; }
 .tool.icon { width: 32px; padding: 0; justify-content: center; }
 .tool.pct { min-width: 52px; justify-content: center; font: 500 12px var(--f-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
 .tool.toggle { color: var(--muted); }
