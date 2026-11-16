@@ -13,15 +13,17 @@ button, textarea { font: inherit; color: inherit; }
 
 /* top bar */
 .top {
+  view-transition-name: topbar; /* stays still while lessons swap underneath */
   position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; align-items: center; gap: 14px;
   padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   background: color-mix(in oklab, var(--paper) 88%, transparent); border-bottom: 1px solid var(--line);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
-.top .mark { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); }
+.top .mark { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); }
 .top .mark-steno { height: 20px; width: 49px; flex: none; color: var(--accent); align-self: center; }
-.top .mark-word { font: italic 22px/1 var(--f-display); }
+.top .mark-word { font: italic 22px/1 var(--f-display); letter-spacing: .005em; }
+.top .mark-sub { margin-left: -6px; }
 .top .mark-sub { font: 500 12px var(--f-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 .top .grow { flex: 1; }
 .top a.btn, .top button.btn { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--line);
@@ -33,7 +35,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 /* frame */
 .frame { display: grid; grid-template-columns: var(--side) minmax(0, 1fr); gap: 48px; max-width: calc(var(--side) + var(--col) + 48px + 64px);
   margin: 0 auto; padding-block: 32px 96px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-nav.lessons { position: sticky; top: 92px; align-self: start; font-size: 14px; }
+nav.lessons { view-transition-name: lesson-nav; position: sticky; top: 92px; align-self: start; font-size: 14px; }
 nav.lessons h2 { font: 600 11px var(--f-ui); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 10px 10px; }
 nav.lessons ol { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 2px; }
 nav.lessons a { display: grid; grid-template-columns: 28px 1fr auto; align-items: baseline; gap: 4px; padding: 7px 10px; border-radius: 9px;
@@ -150,7 +152,7 @@ article.ready > :nth-child(5) { animation-delay: .16s; }
 article.ready > :nth-child(n+6) { animation-delay: .2s; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(10px); } }
 nav.lessons > * { animation: appear .35s both; }
-nav.lessons.settled > * { animation: none; }
+article.ready.instant > * { animation: none; }
 .err { color: #b42318; }
 
 @media (max-width: 900px) {
@@ -163,6 +165,10 @@ nav.lessons.settled > * { animation: none; }
   article h1 { font-size: 36px; }
   .top .mark-sub { display: none; }
 }
+@media (max-width: 640px) {
+  .top .mark-word { font-size: 19px; }
+}
+@media (max-width: 460px) { .top .mark-word { display: none; } }
 @media (max-width: 560px) {
   .nb-drill-item { grid-template-columns: 22px minmax(0, 1fr) auto; }
   .nb-drill-item .nb-paper, .nb-answer-sounds { grid-column: 2 / -1; }

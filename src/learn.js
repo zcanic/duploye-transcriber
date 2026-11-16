@@ -1,6 +1,6 @@
 // The lessons page: a list of notebooks (lessons/index.json) and the reader.
 // Open a lesson with #fr-01, or any notebook on the web with ?src=<url of a .md file>.
-import { renderNotebook } from './notebook.js';
+import { renderNotebook, parse } from './notebook.js';
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
 import { signSvg } from './sheet.js';
@@ -34,14 +34,28 @@ function fitAlphabet() {
 }
 addEventListener('resize', fitAlphabet);
 
-function renderNav(currentId) {
-  if (nav.childElementCount) nav.classList.add('settled'); // fade the list in once, not on every refresh
-  const done = new Set(store.get('duploye.lessons.seen', []));
+// The list is built once; switching lessons only moves the highlight and the ✓ marks,
+// so the sidebar never re-renders (and never jumps).
+let navBuilt = false, cardLang = null;
+function buildNav() {
   const groups = [...new Set(index.map((l) => l.course))];
   nav.innerHTML = groups.map((course) => `<h2>${esc(course)}</h2><ol>${index.filter((l) => l.course === course).map((l) => l.soon
     ? `<li><a class="soon" aria-disabled="true"><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span><span>soon</span></a></li>`
-    : `<li><a href="#${esc(l.id)}"${l.id === currentId ? ' aria-current="page"' : ''}><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span>${done.has(l.id) ? '<span class="done" aria-label="read">✓</span>' : ''}</a></li>`).join('')}</ol>`).join('');
-  nav.append(alphabetCard(alphaLang));
+    : `<li><a href="#${esc(l.id)}" data-id="${esc(l.id)}"><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span><span class="done" aria-label="read" hidden>✓</span></a></li>`).join('')}</ol>`).join('');
+  navBuilt = true;
+}
+function syncNav(currentId, lang = cardLang || 'fr') {
+  if (!navBuilt) buildNav();
+  const done = new Set(store.get('duploye.lessons.seen', []));
+  for (const a of nav.querySelectorAll('a[data-id]')) {
+    if (a.dataset.id === currentId) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    a.querySelector('.done').hidden = !done.has(a.dataset.id);
+  }
+  if (cardLang !== lang) {
+    nav.querySelector('.alpha')?.remove();
+    nav.append(alphabetCard(lang));
+    cardLang = lang;
+  }
   fitAlphabet();
 }
 
@@ -56,11 +70,15 @@ function pager(i) {
   return nav;
 }
 
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let firstShow = true, loadSeq = 0;
+
+// Fetch the next lesson first, then swap it in at once: inside a view transition when
+// switching lessons, after the page transition when arriving from the canvas.
 async function show() {
   nav.classList.remove('open');
   $('menuBtn').setAttribute('aria-expanded', 'false');
-  const params = new URLSearchParams(location.search);
-  const external = params.get('src');
+  const external = new URLSearchParams(location.search).get('src');
   const live = index.filter((l) => !l.soon);
   let entry = null, url;
   if (external) {
@@ -70,15 +88,26 @@ async function show() {
     entry = live.find((l) => l.id === id) || live[0];
     url = `lessons/${entry.file}`;
   }
-  renderNav(entry?.id);
-  article.classList.remove('ready');
-  article.innerHTML = '<p class="loading">Loading the lesson…</p>';
+  const seq = ++loadSeq;
+  syncNav(entry?.id);
+  if (firstShow) article.innerHTML = '<p class="loading">Loading the lesson…</p>';
+  let md;
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    const md = await res.text();
+    md = await res.text();
+    await ready(parse(md).meta.lang === 'en' ? 'en' : 'fr');
+  } catch (err) {
+    console.error(err);
+    article.innerHTML = `<p class="err">Could not load ${esc(url)} (${esc(err.message)}). Check the address, then reload.</p>`;
+    return;
+  }
+  if (seq !== loadSeq) return; // a newer click won
+
+  const swap = async (instant) => {
+    article.classList.remove('ready');
+    article.classList.toggle('instant', instant);
     const { meta } = await renderNotebook(md, article);
-    alphaLang = meta.lang === 'en' ? 'en' : 'fr';
     const title = meta.title || entry?.title || 'Notebook';
     const head = document.createElement('div');
     head.innerHTML = `${meta.kicker || entry ? `<p class="kicker">${esc(meta.kicker || `${entry.course} · ${entry.n}`)}</p>` : ''}<h1>${esc(title)}</h1>`;
@@ -88,15 +117,22 @@ async function show() {
       const seen = new Set(store.get('duploye.lessons.seen', []));
       seen.add(entry.id);
       store.set('duploye.lessons.seen', [...seen]);
-      renderNav(entry.id);
     }
     article.classList.add('ready');
-    if (!entry) renderNav(null); // refresh the alphabet card for the notebook's language
+    syncNav(entry?.id, meta.lang === 'en' ? 'en' : 'fr');
     document.title = `${title} · Duployé Lessons`;
-    if (!location.hash.startsWith('#s')) scrollTo({ top: 0 });
-  } catch (err) {
-    console.error(err);
-    article.innerHTML = `<p class="err">Could not load ${esc(url)} (${esc(err.message)}). Check the address, then reload.</p>`;
+    if (!location.hash.startsWith('#s')) scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  if (firstShow) {
+    firstShow = false;
+    await window.__pageReveal; // arriving from the canvas: let that transition finish first
+    await swap(false);
+  } else if (document.startViewTransition && !reduceMotion.matches) {
+    try { document.startViewTransition({ update: () => swap(true), types: ['lesson'] }); }
+    catch { document.startViewTransition(() => swap(true)); } // browsers without transition types
+  } else {
+    await swap(true);
   }
 }
 

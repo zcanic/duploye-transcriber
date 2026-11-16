@@ -13,7 +13,9 @@
 <script>
   // Tell the page transition which way we are going (canvas <-> lessons), before the first frame.
   addEventListener('pagereveal', (e) => {
-    if (e.viewTransition) e.viewTransition.types.add(/learn\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
+    if (!e.viewTransition) return;
+    e.viewTransition.types.add(/learn\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
+    window.__pageReveal = e.viewTransition.finished.catch(() => {}); // heavy work waits for this
   });
 </script>
 <link rel="expect" href="#lessons" blocking="render">
@@ -21,7 +23,7 @@
 <body>
 <header class="top">
   <button id="menuBtn" class="btn" type="button" aria-expanded="false" aria-controls="lessons">Lessons</button>
-  <a class="mark" href="learn.html"><svg class="mark-steno" viewBox="-40 -684 2325 945.8689270019531" aria-hidden="true"><g transform="scale(1,-1)" fill="currentColor"><path d="M85,35C85,16 101,0 120,0L1120,0C1139,0 1155,16 1155,35C1155,54 1139,70 1120,70L120,70C101,70 85,54 85,35Z" transform="translate(0,0)"/><path d="M85,35C85,16 101,0 120,0C305,0 455,150 455,335C455,354 439,370 420,370C401,370 385,354 385,335C385,189 266,70 120,70C101,70 85,54 85,35Z" transform="translate(1000,0)"/><path d="M85,35C85,16 101,0 120,0C139,0 155,16 155,35L155,535C155,554 139,570 120,570C101,570 85,554 85,535L85,35Z" transform="translate(1300,-200)"/><path d="M145,10L645,510C677.1,542.1 626.9,591.9 595,560L95,60C62.9,27.9 113.1,-21.9 145,10Z" transform="translate(1300,-200)"/><path d="M139,116L245,10C277.1,-22.1 326.9,28.1 295,60L189,166C144,211 144,283 189,328C234,373 306,373 351,328C396,283 396,211 351,166C318.9,133.9 369.1,84.1 401,116C473,188 473,306 401,378C329,450 211,450 139,378C67,306 67,188 139,116Z" transform="translate(1544,194)"/><path d="M95,110L166,40C219,-13 304,-13 357,40C389.0,72.0 338.4,120.4 307,89C282,64 240,64 215,89L145,160C112.9,192.1 63.1,141.9 95,110Z" transform="translate(1694,94)"/><path d="M145,152C170,177 212,177 237,152C262,127 262,85 237,60C205.4,28.4 254.2,-21.8 286,10C339,63 339,148 286,201C233,254 148,254 95,201C63.0,169.0 113.6,120.6 145,152Z" transform="translate(1906,-18)"/></g></svg><span class="mark-word">Duployé</span><span class="mark-sub">Leçons</span></a>
+  <a class="mark" href="learn.html"><svg class="mark-steno" viewBox="-40 -684 2325 945.8689270019531" aria-hidden="true"><g transform="scale(1,-1)" fill="currentColor"><path d="M85,35C85,16 101,0 120,0L1120,0C1139,0 1155,16 1155,35C1155,54 1139,70 1120,70L120,70C101,70 85,54 85,35Z" transform="translate(0,0)"/><path d="M85,35C85,16 101,0 120,0C305,0 455,150 455,335C455,354 439,370 420,370C401,370 385,354 385,335C385,189 266,70 120,70C101,70 85,54 85,35Z" transform="translate(1000,0)"/><path d="M85,35C85,16 101,0 120,0C139,0 155,16 155,35L155,535C155,554 139,570 120,570C101,570 85,554 85,535L85,35Z" transform="translate(1300,-200)"/><path d="M145,10L645,510C677.1,542.1 626.9,591.9 595,560L95,60C62.9,27.9 113.1,-21.9 145,10Z" transform="translate(1300,-200)"/><path d="M139,116L245,10C277.1,-22.1 326.9,28.1 295,60L189,166C144,211 144,283 189,328C234,373 306,373 351,328C396,283 396,211 351,166C318.9,133.9 369.1,84.1 401,116C473,188 473,306 401,378C329,450 211,450 139,378C67,306 67,188 139,116Z" transform="translate(1544,194)"/><path d="M95,110L166,40C219,-13 304,-13 357,40C389.0,72.0 338.4,120.4 307,89C282,64 240,64 215,89L145,160C112.9,192.1 63.1,141.9 95,110Z" transform="translate(1694,94)"/><path d="M145,152C170,177 212,177 237,152C262,127 262,85 237,60C205.4,28.4 254.2,-21.8 286,10C339,63 339,148 286,201C233,254 148,254 95,201C63.0,169.0 113.6,120.6 145,152Z" transform="translate(1906,-18)"/></g></svg><span class="mark-word">Duployé</span></a><span class="mark-sub">Leçons</span>
   <span class="grow"></span>
   <a class="btn" href="./"><span class="btn-long">Open the canvas</span><span class="btn-short">Canvas</span></a>
 </header>

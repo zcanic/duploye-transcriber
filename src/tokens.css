@@ -41,7 +41,12 @@
 html:active-view-transition-type(to-lessons)::view-transition-new(root) { animation-name: vt-in-rise; }
 html:active-view-transition-type(to-canvas)::view-transition-new(root) { animation-name: vt-in-settle; }
 ::view-transition-group(mark) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
-::view-transition-old(mark), ::view-transition-new(mark) { animation-duration: .5s; height: 100%; object-fit: contain; }
+::view-transition-old(mark), ::view-transition-new(mark) { animation-duration: .5s; }
+/* switching lessons inside the lessons page: a quick, flat cross-fade */
+html:active-view-transition-type(lesson)::view-transition-old(root) { animation: vt-fade .16s ease-out both reverse; }
+html:active-view-transition-type(lesson)::view-transition-new(root) { animation: vt-lesson-in .32s cubic-bezier(.2, .8, .2, 1) .04s both; }
+@keyframes vt-fade { from { opacity: 0; } }
+@keyframes vt-lesson-in { from { opacity: 0; transform: translateY(8px); } }
 @keyframes vt-out { to { opacity: 0; transform: scale(.992); } }
 @keyframes vt-in { from { opacity: 0; } }
 @keyframes vt-in-rise { from { opacity: 0; transform: translateY(14px); } }

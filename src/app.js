@@ -366,6 +366,7 @@ async function setLang(lang) {
   $('palette').replaceChildren();
   stopInk();
   if (!(await loadSystem())) return;
+  await window.__pageReveal; // let the page transition finish before shaping and inking
   buildLegend();
   update({ inkAll: true });
   fit();
