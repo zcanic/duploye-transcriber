@@ -35,7 +35,13 @@
 </header>
 
 <main class="room">
-  <div class="topics" id="topics" role="tablist" aria-label="Topics"></div>
+  <div class="topic-bar">
+    <button type="button" id="topicBtn" class="topic-btn" aria-haspopup="listbox" aria-expanded="false" aria-controls="topicMenu">
+      <span id="topicName">全部</span><small id="topicCount"></small>
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg>
+    </button>
+    <div id="topicMenu" class="topic-menu" role="listbox" aria-label="Topics" hidden></div>
+  </div>
 
   <div class="meter" aria-live="polite">
     <div class="bar"><span id="barFill"></span></div>

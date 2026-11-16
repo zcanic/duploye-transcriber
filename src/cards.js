@@ -45,13 +45,33 @@ const cardsOf = (topic) => (topic === 'all' ? topics.flatMap((t) => t.cards) : t
 
 function renderTopics() {
   const now = Date.now();
-  const chip = (id, label, cards) => {
+  const opt = (id, label, cards, cls = '') => {
     const s = stats(cards, state.progress, now);
-    const badge = s.due ? `<small class="due">${s.due}</small>` : `<small>${s.total}</small>`;
-    return `<button type="button" class="topic" role="tab" data-topic="${esc(id)}" aria-selected="${state.topic === id}" title="${s.due} due · ${s.fresh} new · ${s.known} known">${esc(label)}${badge}</button>`;
+    const n = s.due ? `<span class="due">${s.due} 待复习</span> · ${s.total}` : `${s.total}`;
+    const learned = s.total ? (s.known + s.learning) / s.total : 0;
+    return `<button type="button" class="topic-opt ${cls}" role="option" data-topic="${esc(id)}" aria-selected="${state.topic === id}">
+      <span>${esc(label)}</span><span class="n">${n}</span>${learned > 0 ? `<span class="prog"><span style="transform:scaleX(${learned.toFixed(3)})"></span></span>` : ''}</button>`;
   };
-  $('topics').innerHTML = chip('all', '全部', cardsOf('all')) + topics.map((t) => chip(t.topic, pretty(t.topic), t.cards)).join('');
-  $('topics').querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  $('topicMenu').innerHTML = opt('all', '全部', cardsOf('all'), 'all') + topics.map((t) => opt(t.topic, pretty(t.topic), t.cards)).join('');
+  const s = stats(cardsOf(state.topic), state.progress, now);
+  $('topicName').textContent = state.topic === 'all' ? '全部' : pretty(state.topic);
+  $('topicCount').textContent = s.due ? `${s.due} 待复习` : `${s.total} 词`;
+}
+
+function openMenu(open) {
+  const menu = $('topicMenu'), btn = $('topicBtn');
+  if (open === !menu.hidden && !menu.classList.contains('closing')) return;
+  btn.setAttribute('aria-expanded', String(open));
+  if (open) {
+    menu.classList.remove('closing');
+    menu.hidden = false;
+    (menu.querySelector('[aria-selected="true"]') || menu.firstElementChild)?.focus({ preventScroll: true });
+  } else if (reduceMotion.matches) {
+    menu.hidden = true;
+  } else {
+    menu.classList.add('closing');
+    menu.addEventListener('animationend', () => { if (menu.classList.contains('closing')) { menu.hidden = true; menu.classList.remove('closing'); } }, { once: true });
+  }
 }
 
 // ---------- speech ----------
@@ -293,7 +313,17 @@ stage.addEventListener('click', (e) => {
 $('flipBtn').addEventListener('click', flip);
 $('goodBtn').addEventListener('click', () => answer(true));
 $('againBtn').addEventListener('click', () => answer(false));
-$('topics').addEventListener('click', (e) => { const t = e.target.closest('[data-topic]'); if (t) setTopic(t.dataset.topic); });
+$('topicBtn').addEventListener('click', () => openMenu($('topicMenu').hidden));
+$('topicMenu').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-topic]');
+  if (!t) return;
+  openMenu(false);
+  $('topicBtn').focus({ preventScroll: true });
+  if (t.dataset.topic !== state.topic) setTopic(t.dataset.topic);
+});
+document.addEventListener('pointerdown', (e) => {
+  if (!$('topicMenu').hidden && !e.target.closest('.topic-bar')) openMenu(false);
+});
 for (const b of document.querySelectorAll('[data-mode]')) b.addEventListener('click', () => setMode(b.dataset.mode));
 $('speakToggle').addEventListener('click', () => {
   state.speak = !state.speak;
@@ -305,6 +335,7 @@ document.addEventListener('keydown', (e) => {
   const t = e.target instanceof Element ? e.target : null;
   if (e.metaKey || e.ctrlKey || e.altKey || t?.closest('input, textarea')) return;
   const k = e.key;
+  if (!$('topicMenu').hidden) { if (k === 'Escape') { openMenu(false); $('topicBtn').focus(); e.preventDefault(); } return; }
   if (k === ' ' || k === 'Enter') { if (t?.closest('button') && k === 'Enter') return; flip(); }
   else if (k === 'ArrowRight' || k === 'l') answer(true);
   else if (k === 'ArrowLeft' || k === 'h') answer(false);
