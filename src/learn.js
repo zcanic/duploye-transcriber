@@ -2,6 +2,8 @@
 // Open a lesson with #fr-01, or any notebook on the web with ?src=<url of a .md file>.
 import { renderNotebook } from './notebook.js';
 import { ready } from './runtime.js';
+import { SYSTEMS } from './systems.js';
+import { signSvg } from './sheet.js';
 import { wordToPhonemes } from './g2p.js';
 import { toDuployan } from './duploye.js';
 
@@ -13,6 +15,26 @@ const store = {
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const article = $('lesson'), nav = $('lessons');
 let index = [];
+let alphaLang = 'fr';
+
+// Alphabet card under the lesson list. Shown only when the sidebar has room for it.
+function alphabetCard(lang) {
+  const sys = SYSTEMS[lang];
+  const card = document.createElement('section');
+  card.className = 'alpha';
+  card.setAttribute('aria-label', 'Alphabet');
+  card.innerHTML = `<h2>Alphabet</h2>` + sys.groups.map(([, ts]) =>
+    `<div class="alpha-grid">${ts.map((t) => `<span class="alpha-sign" title="${esc(sys.hints[t] || t)}">${signSvg(sys, t)}<b>${esc(t)}</b></span>`).join('')}</div>`).join('');
+  return card;
+}
+function fitAlphabet() {
+  const card = nav.querySelector('.alpha');
+  if (!card) return;
+  card.hidden = false;
+  // the sidebar is sticky: the card stays only if the whole sidebar fits the window
+  if (getComputedStyle(nav).position !== 'sticky' || nav.getBoundingClientRect().top + nav.scrollHeight > innerHeight - 16) card.hidden = true;
+}
+addEventListener('resize', fitAlphabet);
 
 function renderNav(currentId) {
   const done = new Set(store.get('duploye.lessons.seen', []));
@@ -20,6 +42,8 @@ function renderNav(currentId) {
   nav.innerHTML = groups.map((course) => `<h2>${esc(course)}</h2><ol>${index.filter((l) => l.course === course).map((l) => l.soon
     ? `<li><a class="soon" aria-disabled="true"><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span><span>soon</span></a></li>`
     : `<li><a href="#${esc(l.id)}"${l.id === currentId ? ' aria-current="page"' : ''}><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span>${done.has(l.id) ? '<span class="done" aria-label="read">✓</span>' : ''}</a></li>`).join('')}</ol>`).join('');
+  nav.append(alphabetCard(alphaLang));
+  fitAlphabet();
 }
 
 function pager(i) {
@@ -54,6 +78,7 @@ async function show() {
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     const md = await res.text();
     const { meta } = await renderNotebook(md, article);
+    alphaLang = meta.lang === 'en' ? 'en' : 'fr';
     const title = meta.title || entry?.title || 'Notebook';
     const head = document.createElement('div');
     head.innerHTML = `${meta.kicker || entry ? `<p class="kicker">${esc(meta.kicker || `${entry.course} · ${entry.n}`)}</p>` : ''}<h1>${esc(title)}</h1>`;
@@ -65,6 +90,7 @@ async function show() {
       store.set('duploye.lessons.seen', [...seen]);
       renderNav(entry.id);
     }
+    if (!entry) renderNav(null); // refresh the alphabet card for the notebook's language
     document.title = `${title} · Duployé Lessons`;
     if (!location.hash.startsWith('#s')) scrollTo({ top: 0 });
   } catch (err) {

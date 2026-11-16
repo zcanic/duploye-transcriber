@@ -46,6 +46,15 @@ nav.lessons .done { font-size: 12px; color: var(--accent); }
 nav.lessons .soon { color: var(--muted); }
 nav.lessons .soon:hover { background: none; }
 
+/* alphabet card under the lesson list (hidden by script when it would not fit) */
+.alpha { border-top: 1px solid var(--line); padding-top: 14px; }
+.alpha-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin: 0 0 8px; }
+.alpha-sign { display: grid; justify-items: center; padding: 2px 0 3px; border-radius: 7px; line-height: 1; }
+.alpha-sign:hover { background: var(--chip); }
+.alpha-sign .glyph { width: 28px; height: 26px; }
+.alpha-sign .glyph path { fill: var(--ink); }
+.alpha-sign b { font: 500 10px var(--f-mono); color: var(--muted); margin-top: 1px; }
+
 /* article */
 article { min-width: 0; max-width: var(--col); }
 article .kicker { font: 500 12px var(--f-mono); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin: 0 0 6px; }
@@ -137,6 +146,7 @@ pre { background: var(--chip); padding: 12px 14px; border-radius: 10px; overflow
   nav.lessons { position: fixed; z-index: 6; top: 58px; left: 12px; right: 12px; max-height: 70vh; overflow: auto; padding: 14px 8px; background: var(--paper);
     border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
   nav.lessons:not(.open) { display: none; }
+  nav.lessons .alpha { display: none; }
   #menuBtn { display: inline-flex; }
   article h1 { font-size: 36px; }
   .top .mark-sub { display: none; }
