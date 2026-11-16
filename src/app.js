@@ -1,15 +1,14 @@
 import { SYSTEMS, parsePhonemes } from './systems.js';
 import { wordToPhonemes } from './g2p.js';
 import { toDuployan as frDuployan } from './duploye.js';
-import { loadFont, shape } from './shaper.js';
+import { loadFont } from './shaper.js';
+import { InkSheet, buildItems, signSvg } from './sheet.js';
 
 // ---------- constants ----------
 const NS = 'http://www.w3.org/2000/svg';
 const UNIT = 0.056;            // world px per font unit (56 px per em at 100 %)
 const pageWidth = () => (innerWidth < 640 ? 540 : 960); // writing width, world px (narrower on phones = larger text)
-const WORD_GAP = 30, SEP_GAP = 22, LINE_GAP = 44, GLOSS_GAP = 20;
 const GRID = 24;               // dot spacing at 100 %
-const MASK_W = 210;            // reveal brush width, font units (> stroke weight)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const $ = (id) => document.getElementById(id);
 const store = {
@@ -17,12 +16,6 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
 };
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-const el = (tag, attrs = {}, text) => {
-  const n = document.createElementNS(NS, tag);
-  for (const k in attrs) n.setAttribute(k, attrs[k]);
-  if (text !== undefined) n.textContent = text;
-  return n;
-};
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 // ---------- state ----------
@@ -38,203 +31,30 @@ const state = {
 };
 const view = { x: 0, y: 0, k: 1 };
 let model = [];                 // laid-out items
-let nodes = new Map();          // key -> <g>
 let content = { w: 960, h: 100 };
 
 const stage = $('stage'), world = $('world'), ink = $('ink');
 const sys = () => SYSTEMS[state.lang];
 const toDuployan = (tokens) => sys().toDuployan(tokens);
 const overrideKey = (word) => `${state.lang}:${word.toLowerCase()}`;
-
-// ---------- model ----------
-function withOverride(raw) {
-  const k = overrideKey(raw.text);
-  if (!raw.sigle && !raw.elided && !raw.number && state.overrides[k] !== undefined) {
-    return { ...raw, tokens: parsePhonemes(state.overrides[k], sys()).tokens, edited: true, guessed: false };
-  }
-  return raw;
-}
-
-function buildItems() {
-  const items = [];
-  sys().transcribe(state.text, { useSigles: state.sigles }).forEach((sent, si) => {
-    if (si) items.push({ kind: 'sep', text: '×' });
-    let pending = null;
-    for (const raw of sent.map(withOverride)) {
-      if (raw.number) { if (pending) { items.push(pending); pending = null; } items.push({ kind: 'num', text: raw.text }); continue; }
-      const g = pending ?? { kind: 'word', parts: [], text: '', tokens: [], proper: false, edited: false };
-      g.parts.push(raw);
-      g.text += raw.text;
-      g.tokens = g.tokens.concat(raw.tokens);
-      g.proper ||= !!raw.properNoun;
-      g.edited ||= !!raw.edited;
-      g.guessed ||= !!raw.guessed;
-      if (raw.joinToNext) pending = g; else { items.push(g); pending = null; }
-    }
-    if (pending) items.push(pending);
-  });
-  const seen = new Map(), seenText = new Map();
-  for (const it of items) {
-    const base = it.kind === 'word' ? `${it.text.toLowerCase()}|${it.tokens.join('.')}` : `${it.kind}|${it.text}`;
-    const n = (seen.get(base) || 0) + 1;
-    seen.set(base, n);
-    it.key = `${base}|${n}`;
-    if (it.kind === 'word') {
-      const t = it.text.toLowerCase();
-      it.occ = (seenText.get(t) || 0) + 1;
-      seenText.set(t, it.occ);
-    }
-  }
-  return items;
-}
-
-// ---------- measuring & layout ----------
-const mctx = document.createElement('canvas').getContext('2d');
-const textW = (s, font) => { mctx.font = font; return mctx.measureText(s).width; };
-
-function measure(it) {
-  if (it.kind === 'sep') return { w: 12, asc: 8, desc: 4, left: 0 };
-  if (it.kind === 'num') return { w: textW(it.text, '500 22px "Geist Mono", monospace'), asc: 18, desc: 6, left: 0 };
-  it.shape = shape(toDuployan(it.tokens));
-  const b = it.shape.box;
-  const inkW = (b.x1 - b.x0) * UNIT;
-  const glossW = state.gloss ? textW(it.text, '12px "Geist Mono", monospace') : 0;
-  return { w: Math.max(inkW, glossW, 8), inkW, asc: Math.max(b.y1 * UNIT, 10), desc: Math.max(-b.y0 * UNIT, 6), left: -b.x0 * UNIT };
-}
-
-function layout(items) {
-  const PAGE_W = pageWidth();
-  const lines = [];
-  let line = [], x = 0;
-  for (const it of items) {
-    it.m = measure(it);
-    if (line.length && it.kind !== 'sep' && x + it.m.w > PAGE_W) { lines.push(line); line = []; x = 0; }
-    it.lx = x;
-    line.push(it);
-    x += it.m.w + (it.kind === 'sep' ? SEP_GAP : WORD_GAP);
-  }
-  if (line.length) lines.push(line);
-  let top = 0;
-  for (const ln of lines) {
-    const asc = Math.max(...ln.map((i) => i.m.asc)), desc = Math.max(...ln.map((i) => i.m.desc));
-    const base = top + asc;   // the pen starts on the writing line
-    for (const it of ln) { it.x = it.lx + it.m.left; it.y = base; it.glossY = desc + GLOSS_GAP; it.lineDesc = desc; }
-    top = base + desc + (state.gloss ? GLOSS_GAP + 4 : 0) + LINE_GAP;
-  }
-  return { w: PAGE_W, h: Math.max(top - LINE_GAP, 60) };
-}
-
-// ---------- drawing ----------
-function fillNode(g, it) {
-  g.replaceChildren();
-  const m = it.m;
-  if (it.kind === 'sep') { g.append(el('text', { class: 'sepmark', x: 0, y: 4, 'text-anchor': 'middle' }, '×')); return; }
-  if (it.kind === 'num') {
-    g.append(el('text', { class: 'num', x: 0, y: 0 }, it.text), el('line', { class: 'ul', x1: 0, x2: m.w, y1: 6, y2: 6 }));
-    return;
-  }
-  const bottom = state.gloss ? it.glossY + 6 : it.lineDesc;
-  g.append(el('rect', { class: 'hit', x: -m.left - 8, y: -m.asc - 8, width: m.w + 16, height: m.asc + bottom + 14, rx: 9 }));
-  const glyphs = el('g', { transform: `scale(${UNIT},${-UNIT})` });
-  for (const gl of it.shape.glyphs) glyphs.append(el('path', { class: 'g', d: gl.d, transform: `translate(${gl.x},${gl.y})` }));
-  g.append(glyphs);
-  if (it.proper) g.append(el('line', { class: 'ul', x1: -m.left, x2: -m.left + m.inkW, y1: m.desc + 5, y2: m.desc + 5 }));
-  if (state.gloss) g.append(el('text', { class: 'gloss', x: -m.left, y: it.glossY }, it.text));
-  g.setAttribute('aria-label', `${it.text}: ${it.tokens.join(' ')}`);
-}
-
-function makeNode(it) {
-  const g = el('g', { class: `word fresh${it.kind !== 'word' ? ' deco' : ''}`, 'data-key': it.key });
-  if (it.kind === 'word') { g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); }
-  else g.style.cursor = 'default';
-  fillNode(g, it);
-  return g;
-}
-
-const place = (g, it) => { g.style.transform = `translate(${it.x.toFixed(2)}px, ${it.y.toFixed(2)}px)`; };
-
-// ---------- ink animation ----------
-// Each glyph is revealed by a wide white stroke running along its own outline
-// inside a mask. Outlines start at the pen's entry point, so the reveal follows
-// the direction of writing. Masks are removed as soon as a glyph is finished.
-const running = new Set();
-let maskSeq = 0;
-
-function stopInk() {
-  for (const r of running) { r.anim.cancel(); r.path.removeAttribute('mask'); r.mask.remove(); }
-  running.clear();
-}
-
-function inkWords(queue) {
-  if (reduceMotion.matches || !queue.length) return;
-  const plan = [];
-  let total = 0;
-  for (const [g, it] of queue) {
-    const paths = g.querySelectorAll('.g');
-    it.shape.glyphs.forEach((gl, i) => {
-      const dur = clamp(90 + gl.len * 0.17, 120, 340);
-      plan.push({ g, gl, path: paths[i], dur });
-      total += dur * 0.85;
-    });
-    total += 70; // pen lift between words
-  }
-  const speed = Math.min(1, 5000 / Math.max(total, 1)); // keep a long page under ~5 s
-  let t = 40, lastG = null;
-  for (const p of plan) {
-    if (lastG && lastG !== p.g) t += 70 * speed;
-    lastG = p.g;
-    const { gl, path } = p;
-    const id = `ink${++maskSeq}`;
-    const pad = MASK_W;
-    const mask = el('mask', { id, maskUnits: 'userSpaceOnUse', x: gl.box.x0 - pad, y: gl.box.y0 - pad, width: gl.box.x1 - gl.box.x0 + 2 * pad, height: gl.box.y1 - gl.box.y0 + 2 * pad });
-    const brush = el('path', { d: gl.d, fill: 'none', stroke: '#fff', 'stroke-width': MASK_W, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', pathLength: 1, 'stroke-dasharray': '1 1', 'stroke-dashoffset': 1 });
-    mask.append(brush);
-    path.parentNode.insertBefore(mask, path);
-    path.setAttribute('mask', `url(#${id})`);
-    const dur = p.dur * speed;
-    // The outline runs out along one side of the stroke and back along the other;
-    // the wide brush covers the full stroke on the way out, so half the contour suffices.
-    const anim = brush.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0.5 }], { duration: dur, delay: t, easing: 'cubic-bezier(.35,.1,.25,1)', fill: 'both' });
-    const rec = { anim, path, mask };
-    running.add(rec);
-    anim.finished.then(() => { path.removeAttribute('mask'); mask.remove(); running.delete(rec); }, () => {});
-    t += dur * 0.85;
-  }
-}
+const sheet = new InkSheet(ink, { unit: UNIT, width: pageWidth, gloss: () => state.gloss, interactive: true });
+const langOverrides = () => {
+  const pre = `${state.lang}:`, out = {};
+  for (const [k, v] of Object.entries(state.overrides)) if (k.startsWith(pre)) out[k.slice(pre.length)] = v;
+  return out;
+};
 
 // ---------- update cycle ----------
 function update({ inkAll = false } = {}) {
-  if (inkAll) stopInk();
-  const items = buildItems();
-  content = layout(items);
-  const old = nodes;
-  const next = new Map();
-  const queue = [];
-  for (const it of items) {
-    let g = old.get(it.key);
-    if (g && !inkAll) {
-      old.delete(it.key);
-      fillNode(g, it);
-    } else {
-      if (g) { old.delete(it.key); g.remove(); }
-      g = makeNode(it);
-      ink.append(g);
-      if (it.kind === 'word') queue.push([g, it]);
-    }
-    place(g, it);
-    it.node = g;
-    next.set(it.key, g);
-  }
-  for (const g of old.values()) { g.classList.add('leaving'); setTimeout(() => g.remove(), 220); }
-  nodes = next;
+  const items = buildItems(state.text, sys(), { useSigles: state.sigles, overrides: langOverrides() });
+  content = sheet.set(items, sys(), { inkAll });
   model = items;
-  inkWords(queue);
-  requestAnimationFrame(() => requestAnimationFrame(() => { for (const g of nodes.values()) g.classList.remove('fresh'); }));
   syncSelection();
   const words = items.filter((i) => i.kind === 'word');
   const edited = words.filter((w) => w.edited).length;
   $('status').textContent = `${words.length} word${words.length === 1 ? '' : 's'}${edited ? ` · ${edited} edited` : ''}`;
 }
+const stopInk = () => sheet.stop();
 
 // ---------- view: pan & zoom ----------
 let rafView = 0;
@@ -367,7 +187,7 @@ function select(it) {
 
 function syncSelection(opening = false) {
   const it = selectedItem();
-  for (const g of nodes.values()) g.classList.toggle('sel', !!it && g === it.node);
+  for (const g of sheet.nodes.values()) g.classList.toggle('sel', !!it && g === it.node);
   const insp = $('inspector');
   if (!it) { insp.hidden = true; state.sel = null; $('drawerHint').textContent = 'Select a word, then tap a sign to add it.'; return; }
   $('drawerHint').textContent = `Tap a sign to add it to “${it.text}”.`;
@@ -469,19 +289,7 @@ $('inspClose').addEventListener('click', () => select(null));
 const popLast = () => { const c = $('chips').querySelectorAll('.chip'); c[c.length - 1]?.classList.add('pop'); };
 
 // ---------- mini glyphs (chips, legend) ----------
-const glyphCache = new Map();
-function glyphSvg(token) {
-  const ck = `${state.lang}:${token}`;
-  if (glyphCache.has(ck)) return glyphCache.get(ck);
-  // One shared scale for every sign, so a short P stays half the length of a long B.
-  const s = shape(toDuployan([token]));
-  const b = s.box, span = 1250;
-  const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-  const paths = s.glyphs.map((g) => `<path d="${g.d}" transform="translate(${g.x},${g.y})"/>`).join('');
-  const svg = `<svg class="glyph" viewBox="${cx - span / 2} ${-cy - span / 2} ${span} ${span}" aria-hidden="true"><g transform="scale(1,-1)">${paths}</g></svg>`;
-  glyphCache.set(ck, svg);
-  return svg;
-}
+const glyphSvg = (token) => signSvg(sys(), token);
 
 function buildLegend() {
   const { groups, hints } = sys();
@@ -633,7 +441,7 @@ async function boot() {
   setToggle('sigles', state.sigles);
   $('status').textContent = 'Loading the pen…';
   try {
-    await Promise.all([loadFont('fonts/NotoSansDuployan-Regular.ttf'), document.fonts.ready]);
+    await Promise.all([loadFont(new URL('../fonts/NotoSansDuployan-Regular.ttf', import.meta.url).href), document.fonts.ready]);
   } catch (err) {
     $('status').textContent = 'Could not load the shorthand font. Reload the page to try again.';
     console.error(err);

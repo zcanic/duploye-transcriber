@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duployé Lessons</title>
+<meta name="description" content="Learn Duployé shorthand with live, editable shorthand cells and self-check drills.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="preload" href="fonts/NotoSansDuployan-Regular.ttf" as="fetch" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="src/learn.css">
+</head>
+<body>
+<header class="top">
+  <button id="menuBtn" class="btn" type="button" aria-expanded="false" aria-controls="lessons">Lessons</button>
+  <a class="mark" href="learn.html"><span class="mark-steno" aria-hidden="true"></span><span class="mark-word">Duployé</span><span class="mark-sub">Leçons</span></a>
+  <span class="grow"></span>
+  <a class="btn" href="./"><span class="btn-long">Open the canvas</span><span class="btn-short">Canvas</span></a>
+</header>
+<div class="frame">
+  <nav class="lessons" id="lessons" aria-label="Lessons"></nav>
+  <article id="lesson" aria-live="polite"><p class="loading">Loading the lesson…</p></article>
+</div>
+<script type="module" src="src/learn.js"></script>
+</body>
+</html>

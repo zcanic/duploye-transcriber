@@ -1,36 +1,7 @@
+@import url("tokens.css");
+
 /* Layout: one full-bleed dot-grid sheet; floating tool bar (top), composer (bottom),
    word inspector beside the selected word, alphabet drawer (right). */
-:root {
-  --paper: #ffffff;        /* the sheet */
-  --dot: #d3d8e3;          /* dot grid, cool to match the ink */
-  --ink: #1b2440;          /* bleu-noir fountain-pen ink */
-  --accent: #2743b8;       /* Sergent-Major blue: selection, focus */
-  --muted: #7b8193;
-  --line: #e4e7ee;
-  --panel: #ffffffee;
-  --chip: #f2f4f8;
-  --shadow: 0 1px 2px #1b24400d, 0 8px 28px #1b24401a;
-  --f-ui: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --f-display: "Instrument Serif", "Iowan Old Style", Georgia, serif;
-  --ease: cubic-bezier(.2, .8, .2, 1);
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #111318; --dot: #2a2f3b; --ink: #e2e8f6; --accent: #93a8ff; --muted: #8b91a2;
-    --line: #262a34; --panel: #1a1d24ee; --chip: #232733; --shadow: 0 1px 2px #0006, 0 8px 28px #0008;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --paper: #111318; --dot: #2a2f3b; --ink: #e2e8f6; --accent: #93a8ff; --muted: #8b91a2;
-  --line: #262a34; --panel: #1a1d24ee; --chip: #232733; --shadow: 0 1px 2px #0006, 0 8px 28px #0008;
-  color-scheme: dark;
-}
-
-@font-face { font-family: "Noto Sans Duployan"; src: url("../fonts/NotoSansDuployan-Regular.ttf") format("truetype"); font-display: swap; }
-
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; overflow: hidden; }
 body { background: var(--paper); color: var(--ink); font: 14px/1.45 var(--f-ui); -webkit-font-smoothing: antialiased; }
@@ -86,6 +57,7 @@ button, textarea { font: inherit; color: inherit; }
   border: 0; border-radius: 9px; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500;
   transition: background .15s, color .15s, transform .1s;
 }
+a.tool { text-decoration: none; color: inherit; }
 .tool:hover { background: var(--chip); }
 .tool:active { transform: scale(.96); }
 .tool:focus-visible, .chip:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

@@ -30,7 +30,7 @@ export const SYSTEMS = {
     tokens: en.TOKENS,
     groups: en.GROUPS,
     hints: en.HINTS,
-    ready: () => en.loadDictionary('data/cmudict-en.txt'),
+    ready: () => en.loadDictionary(new URL('../data/cmudict-en.txt', import.meta.url).href),
     transcribe: en.transcribe,
     toDuployan: en.toDuployan,
   },

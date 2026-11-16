@@ -4,7 +4,7 @@ Type French or English and watch it written in **Duployé shorthand**: the origi
 
 As far as I could find, no other tool converts text to Duployé. This one runs entirely in the browser, with no build step.
 
-**Live:** https://zcanic.github.io/duploye-transcriber/
+**Live:** [canvas](https://zcanic.github.io/duploye-transcriber/) · [lessons](https://zcanic.github.io/duploye-transcriber/learn.html) · [embed](https://zcanic.github.io/duploye-transcriber/embed.html)
 
 ```
 French text ──► sounds (rule-based, editable) ──► Unicode Duployan ──► HarfBuzz + Noto Sans Duployan ──► SVG outlines, inked stroke by stroke
@@ -25,6 +25,49 @@ French text ──► sounds (rule-based, editable) ──► Unicode Duployan �
 - **Export** the page as SVG, or copy it as Unicode (U+1BC00–1BC9F).
 
 Keys: `R` write again · `0` fit · `+`/`-` zoom · `G` gloss · `A` alphabet · `Esc` close · `⌘/Ctrl+Enter` in the text box writes again.
+
+## Lessons: notebooks with live shorthand
+
+[`learn.html`](https://zcanic.github.io/duploye-transcriber/learn.html) reads lessons written in plain Markdown, the way a Jupyter notebook mixes prose and cells. Every shorthand cell is live: it writes itself out when scrolled into view, and the reader can edit its text. Drill cells hide the answer until the reader checks.
+
+````markdown
+---
+title: Circle vowels
+lang: fr              # fr = Duployé, en = Sloan-Duployan
+---
+Ordinary **Markdown**: headings, lists, tables, > notes, `code`, [links](https://…).
+
+```steno sounds
+coke mode poupe        ← live cell; "sounds" lists each word's sounds,
+```                       "nogloss" hides the words, "nosigles" spells out abbreviations,
+                          "lang=en" switches system for one cell
+
+```signs
+P B T D                ← single signs at true scale, one row per line
+```
+
+```write
+homme                  ← write it yourself, then check
+homme = o M            ← "= sounds" fixes the answer when the rules guess wrong
+```
+
+```read
+coke                   ← shorthand shown, word hidden
+```
+````
+
+The built-in course lives in [`lessons/`](lessons/) and is listed in `lessons/index.json`. To read your own notebook, host the `.md` file anywhere that allows cross-origin requests (a GitHub raw URL works), then open `learn.html?src=<its URL>`. Everything in a notebook is escaped; only the Markdown subset above becomes markup.
+
+## Embed: `<duploye-text>`
+
+Add shorthand to any page with one script and one tag. See [`embed.html`](https://zcanic.github.io/duploye-transcriber/embed.html) for live examples.
+
+```html
+<script type="module" src="https://zcanic.github.io/duploye-transcriber/src/embed.js"></script>
+<duploye-text lang="fr" gloss>Un pour tous, tous pour un.</duploye-text>
+```
+
+Attributes: `lang` (`fr` or `en`), `gloss`, `nosigles`, `size` (px per em), `width` (wrap width), `static` (no animation). The ink takes the element's CSS `color`; `el.replay()` writes it again.
 
 ## Limitations
 
@@ -65,7 +108,13 @@ Rebuild the English dictionary from a new CMUdict release with `python3 tools/bu
 | `src/english.js` | English: CMU phones → Sloan-Duployan signs, word signs, spelling fallback |
 | `src/systems.js` | the two writing systems behind one interface |
 | `src/shaper.js` | HarfBuzz (WASM) shaping → positioned glyph outlines |
-| `src/app.js`, `src/style.css`, `index.html` | canvas, layout, ink animation, editing |
+| `src/sheet.js` | shared layout, SVG drawing and stroke-by-stroke ink |
+| `src/runtime.js` | loads the font and dictionaries once, from the module's own location |
+| `src/app.js`, `src/style.css`, `index.html` | the canvas |
+| `src/notebook.js`, `src/learn.js`, `src/learn.css`, `learn.html` | the notebook format and the lessons page |
+| `src/embed.js`, `embed.html` | the `<duploye-text>` web component |
+| `lessons/` | the built-in course (Chinese, French Duployé) |
+| `src/tokens.css` | shared colors and type |
 | `vendor/harfbuzzjs/` | [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) 1.6.4 (MIT) |
 | `fonts/` | Noto Sans Duployan (SIL OFL 1.1, see `fonts/OFL.txt`) |
 | `data/cmudict-en.txt` | CMU Pronouncing Dictionary, compacted (BSD-style, see `data/cmudict-LICENSE.txt`) |
@@ -87,4 +136,4 @@ Code: MIT. Font: SIL Open Font License 1.1. harfbuzzjs: MIT. CMUdict: BSD-style 
 
 ### 中文简介
 
-输入法语或英语，在点阵纸上一笔一笔写成 Duployé 速记。英语用的是 Sloan-Duployan 体系，读音查 CMU 发音词典，查不到的词按拼写猜并标出来。流程是：先按 Duployé 的规则把单词拆成音，每个词的音都可以手动改；再交给 Noto Sans Duployan 字体负责连写和元音转向。拆音规则基于教材 *Sténographie intégrale*。字体实现的是 Unicode 的通用 Duployan 模型，所以 é/i 的转向、元音画在角外侧、鼻元音的象限这些细节不一定和法语教材完全一致，书写时以教材为准。
+输入法语或英语，在点阵纸上一笔一笔写成 Duployé 速记。内置中文课程（learn.html）用 Markdown 笔记本格式编写，里面的速记格子可以编辑、重放，练习题点击后才显示答案；任何人都可以用同样的格式写自己的课程。英语用的是 Sloan-Duployan 体系，读音查 CMU 发音词典，查不到的词按拼写猜并标出来。流程是：先按 Duployé 的规则把单词拆成音，每个词的音都可以手动改；再交给 Noto Sans Duployan 字体负责连写和元音转向。拆音规则基于教材 *Sténographie intégrale*。字体实现的是 Unicode 的通用 Duployan 模型，所以 é/i 的转向、元音画在角外侧、鼻元音的象限这些细节不一定和法语教材完全一致，书写时以教材为准。

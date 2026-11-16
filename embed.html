@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>duploye-text</title>
+<meta name="description" content="Embed Duployé shorthand in any web page with one script and one tag.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="src/learn.css">
+<script type="module" src="src/embed.js"></script>
+<style>
+  .demo { margin: 18px 0; padding: 18px; border: 1px solid var(--line); border-radius: 14px; color: var(--ink);
+    background-image: radial-gradient(circle, var(--dot) 1.1px, transparent 1.35px); background-size: 20px 20px; }
+  .demo.blue { color: var(--accent); }
+  .inline-demo { font-size: 18px; }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="mark" href="./"><span class="mark-word">Duployé</span><span class="mark-sub">Embed</span></a>
+  <span class="grow"></span>
+  <a class="btn" href="learn.html">Lessons</a>
+  <a class="btn" href="./">Canvas</a>
+</header>
+<div class="frame" style="grid-template-columns: minmax(0,1fr); max-width: 760px;">
+<article>
+  <p class="kicker">Web component</p>
+  <h1>&lt;duploye-text&gt;</h1>
+  <p>Put Duployé shorthand on any page. Load one script, then wrap French or English in the tag. The shorthand writes itself out when it scrolls into view.</p>
+  <pre><code>&lt;script type="module" src="https://zcanic.github.io/duploye-transcriber/src/embed.js"&gt;&lt;/script&gt;
+
+&lt;duploye-text lang="fr" gloss&gt;Un pour tous, tous pour un.&lt;/duploye-text&gt;</code></pre>
+
+  <div class="demo"><duploye-text lang="fr" gloss>Un pour tous, tous pour un.</duploye-text></div>
+
+  <h2>English, in ink blue</h2>
+  <pre><code>&lt;duploye-text lang="en" gloss style="color: #2743b8"&gt;Shorthand is the art of writing fast.&lt;/duploye-text&gt;</code></pre>
+  <div class="demo blue"><duploye-text lang="en" gloss>Shorthand is the art of writing fast.</duploye-text></div>
+
+  <h2>Inline, in a sentence</h2>
+  <p class="inline-demo">The French word <em>bonjour</em> is written <duploye-text lang="fr" size="30" static>bonjour</duploye-text> in Duployé.</p>
+
+  <h2>Attributes</h2>
+  <div class="nb-table"><table>
+    <thead><tr><th>Attribute</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>lang</code></td><td><code>fr</code> for Duployé (default), <code>en</code> for Sloan-Duployan</td></tr>
+      <tr><td><code>gloss</code></td><td>show the words under the shorthand</td></tr>
+      <tr><td><code>nosigles</code></td><td>spell out abbreviations instead of using sigles or word signs</td></tr>
+      <tr><td><code>size</code></td><td>pen size in px per em (default 40)</td></tr>
+      <tr><td><code>width</code></td><td>wrap width in px (default: the width of the parent)</td></tr>
+      <tr><td><code>static</code></td><td>draw at once, without the writing animation</td></tr>
+    </tbody>
+  </table></div>
+  <p>The ink takes the element's <code>color</code>; set <code>--duploye-gloss</code> to color the words underneath. Call <code>element.replay()</code> to write it again. Changing the text or an attribute redraws it.</p>
+</article>
+</div>
+</body>
+</html>
