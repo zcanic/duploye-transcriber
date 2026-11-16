@@ -7,7 +7,7 @@
 <meta name="description" content="Write French in Duployé shorthand. Type French and watch it written stroke by stroke; every word's sounds are editable.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=fallback">
 <link rel="preload" href="fonts/NotoSansDuployan-Regular.ttf" as="fetch" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="src/style.css">
 <script>
@@ -16,6 +16,7 @@
     if (e.viewTransition) e.viewTransition.types.add(/learn\.html$/.test(location.pathname) ? 'to-lessons' : 'to-canvas');
   });
 </script>
+<link rel="expect" href="#first-frame" blocking="render">
 </head>
 <body>
 <div id="stage" aria-label="Shorthand canvas. Drag to pan, scroll or pinch to zoom.">
@@ -23,7 +24,7 @@
 </div>
 
 <header id="bar" class="float">
-  <div class="mark"><span class="mark-steno" aria-hidden="true">&#x1BC08;&#x1BC51;&#x1BC02;&#x1BC06;&#x1BC44;&#x1BC46;&#x1BC47;</span><span class="mark-word"><em>Duployé</em></span></div>
+  <div class="mark"><svg class="mark-steno" viewBox="-40 -684 2325 945.8689270019531" aria-hidden="true"><g transform="scale(1,-1)" fill="currentColor"><path d="M85,35C85,16 101,0 120,0L1120,0C1139,0 1155,16 1155,35C1155,54 1139,70 1120,70L120,70C101,70 85,54 85,35Z" transform="translate(0,0)"/><path d="M85,35C85,16 101,0 120,0C305,0 455,150 455,335C455,354 439,370 420,370C401,370 385,354 385,335C385,189 266,70 120,70C101,70 85,54 85,35Z" transform="translate(1000,0)"/><path d="M85,35C85,16 101,0 120,0C139,0 155,16 155,35L155,535C155,554 139,570 120,570C101,570 85,554 85,535L85,35Z" transform="translate(1300,-200)"/><path d="M145,10L645,510C677.1,542.1 626.9,591.9 595,560L95,60C62.9,27.9 113.1,-21.9 145,10Z" transform="translate(1300,-200)"/><path d="M139,116L245,10C277.1,-22.1 326.9,28.1 295,60L189,166C144,211 144,283 189,328C234,373 306,373 351,328C396,283 396,211 351,166C318.9,133.9 369.1,84.1 401,116C473,188 473,306 401,378C329,450 211,450 139,378C67,306 67,188 139,116Z" transform="translate(1544,194)"/><path d="M95,110L166,40C219,-13 304,-13 357,40C389.0,72.0 338.4,120.4 307,89C282,64 240,64 215,89L145,160C112.9,192.1 63.1,141.9 95,110Z" transform="translate(1694,94)"/><path d="M145,152C170,177 212,177 237,152C262,127 262,85 237,60C205.4,28.4 254.2,-21.8 286,10C339,63 339,148 286,201C233,254 148,254 95,201C63.0,169.0 113.6,120.6 145,152Z" transform="translate(1906,-18)"/></g></svg><span class="mark-word"><em>Duployé</em></span></div>
   <div class="tools" role="toolbar" aria-label="Canvas tools">
     <div class="seg" role="group" aria-label="Language">
       <button class="tool toggle" type="button" data-lang="fr" aria-pressed="true" title="French: Duployé">FR</button>
@@ -70,11 +71,28 @@
 
 <form id="composer" class="float" autocomplete="off">
   <label for="src" class="vh">French text</label>
-  <textarea id="src" rows="1" spellcheck="false" placeholder=""></textarea>
+  <textarea id="src" rows="1" spellcheck="false" placeholder="" data-en-sample="Shorthand is the art of writing as fast as people speak. Practice a little every day, and read your notes aloud.">La loi donne à l'avocat l'arme qu'il faut pour chaque cas. Lorsque la cause est bonne et en accord avec le code, il l'adopte et la gagne.</textarea>
   <div class="composer-meta"><span id="status" aria-live="polite"></span><span class="hint"><kbd>⌘↵</kbd>write again</span></div>
 </form>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<script>
+  // Restore the composer and toggles before the first frame, so nothing jumps when the app boots.
+  // Keys and samples mirror src/app.js and src/systems.js.
+  (() => {
+    const get = (k) => { try { const v = localStorage.getItem(k); return v === null ? null : JSON.parse(v); } catch { return null; } };
+    const lang = get('duploye.lang') === 'en' ? 'en' : 'fr';
+    const src = document.getElementById('src');
+    const text = get('duploye.v2.text.' + lang) ?? (lang === 'fr' ? get('duploye.v2.text') : null);
+    if (text !== null) src.value = text; else if (lang === 'en') src.value = src.dataset.enSample;
+    for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+    if (get('duploye.gloss') === false) document.getElementById('gloss').setAttribute('aria-pressed', 'false');
+    if (get('duploye.sigles') === false) document.getElementById('sigles').setAttribute('aria-pressed', 'false');
+    src.style.height = src.scrollHeight + 'px';
+  })();
+</script>
+<span id="first-frame" hidden></span>
+
 <noscript><p style="padding:24px">This tool needs JavaScript.</p></noscript>
 <script type="module" src="src/app.js"></script>
 </body>

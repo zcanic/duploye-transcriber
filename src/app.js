@@ -1,6 +1,4 @@
 import { SYSTEMS, parsePhonemes } from './systems.js';
-import { wordToPhonemes } from './g2p.js';
-import { toDuployan as frDuployan } from './duploye.js';
 import { loadFont } from './shaper.js';
 import { InkSheet, buildItems, signSvg } from './sheet.js';
 
@@ -447,7 +445,6 @@ async function boot() {
     console.error(err);
     return;
   }
-  document.querySelector('.mark-steno').textContent = frDuployan(wordToPhonemes('Duployé'));
   if (!(await loadSystem())) return;
   buildLegend();
   update({ inkAll: true });

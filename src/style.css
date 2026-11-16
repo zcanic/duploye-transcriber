@@ -46,9 +46,9 @@ button, textarea { font: inherit; color: inherit; }
   right: max(12px, env(safe-area-inset-right, 0px)); width: max-content; max-width: calc(100% - 24px);
   display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px;
 }
-.mark { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.mark { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .mark-word { font: italic 22px/1 var(--f-display); letter-spacing: .005em; }
-.mark-steno { font: 22px/1 "Noto Sans Duployan"; color: var(--accent); }
+.mark-steno { height: 20px; width: 49px; flex: none; color: var(--accent); align-self: center; }
 .tools { display: flex; align-items: center; gap: 2px; overflow-x: auto; scrollbar-width: none; }
 .tools::-webkit-scrollbar { display: none; }
 .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; flex: none; }

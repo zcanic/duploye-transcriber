@@ -4,8 +4,6 @@ import { renderNotebook } from './notebook.js';
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
 import { signSvg } from './sheet.js';
-import { wordToPhonemes } from './g2p.js';
-import { toDuployan } from './duploye.js';
 
 const $ = (id) => document.getElementById(id);
 const store = {
@@ -116,6 +114,5 @@ addEventListener('hashchange', () => { if (!location.hash.startsWith('#s')) show
     return;
   }
   await ready('fr');
-  document.querySelector('.mark-steno').textContent = toDuployan(wordToPhonemes('Duployé'));
   show();
 })();

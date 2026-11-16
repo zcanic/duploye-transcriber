@@ -4,7 +4,7 @@
    cell is a small dot-grid sheet set into the page, like a card pasted into a cahier. */
 :root { --col: 700px; --side: 248px; }
 * { box-sizing: border-box; }
-html { scroll-padding-top: 76px; }
+html { scroll-padding-top: 76px; scrollbar-gutter: stable; } /* no sideways jump when the lesson grows a scrollbar */
 body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.7 var(--f-ui); -webkit-font-smoothing: antialiased; }
 a { color: var(--accent); }
 button, textarea { font: inherit; color: inherit; }
@@ -19,8 +19,8 @@ button, textarea { font: inherit; color: inherit; }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
 }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
-.top .mark { display: flex; align-items: baseline; gap: 8px; text-decoration: none; color: var(--ink); }
-.top .mark-steno { font: 22px/1 "Noto Sans Duployan"; color: var(--accent); }
+.top .mark { display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); }
+.top .mark-steno { height: 20px; width: 49px; flex: none; color: var(--accent); align-self: center; }
 .top .mark-word { font: italic 22px/1 var(--f-display); }
 .top .mark-sub { font: 500 12px var(--f-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 .top .grow { flex: 1; }
