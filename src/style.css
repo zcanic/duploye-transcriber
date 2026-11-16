@@ -112,7 +112,9 @@ kbd { font: 11px var(--f-mono); background: var(--chip); border-radius: 4px; pad
 /* drawer */
 #drawer {
   right: max(12px, env(safe-area-inset-right, 0px)); top: calc(70px + env(safe-area-inset-top, 0px));
-  width: 268px; max-height: calc(100% - 200px); overflow: auto; padding: 14px;
+  width: 268px; overflow: auto; padding: 14px;
+  /* stop 12px above the composer, whatever its height (two lines of text on an iPad, for example) */
+  max-height: calc(100dvh - 70px - env(safe-area-inset-top, 0px) - var(--dock, 96px) - 14px - env(safe-area-inset-bottom, 0px) - 12px);
 }
 .drawer-head h2 { font: italic 22px/1 var(--f-display); margin: 0; }
 .drawer-head p { color: var(--muted); font-size: 12px; margin: 4px 0 12px; }

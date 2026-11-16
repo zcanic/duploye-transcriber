@@ -70,7 +70,9 @@ function openMenu(open) {
     menu.hidden = true;
   } else {
     menu.classList.add('closing');
-    menu.addEventListener('animationend', () => { if (menu.classList.contains('closing')) { menu.hidden = true; menu.classList.remove('closing'); } }, { once: true });
+    const done = () => { if (menu.classList.contains('closing')) { menu.hidden = true; menu.classList.remove('closing'); } };
+    menu.addEventListener('animationend', done, { once: true });
+    setTimeout(done, 200); // in case the animation never runs
   }
 }
 

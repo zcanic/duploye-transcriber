@@ -123,6 +123,9 @@ Rebuild the English dictionary from a new CMUdict release with `python3 tools/bu
 | `fonts/` | Noto Sans Duployan (SIL OFL 1.1, see `fonts/OFL.txt`) |
 | `data/cmudict-en.txt` | CMU Pronouncing Dictionary, compacted (BSD-style, see `data/cmudict-LICENSE.txt`) |
 | `test/test.mjs` | regression tests |
+| `src/menu.js` | the drawer behind the wordmark (pages, embed, source) |
+| `assets/`, `tools/build-assets.mjs` | share image and icons, built from the site's own fonts |
+| `sitemap.xml` | one URL per page and per lesson, for search engines |
 
 ## References
 

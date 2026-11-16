@@ -1,5 +1,5 @@
 // The lessons page: a list of notebooks (lessons/index.json) and the reader.
-// Open a lesson with #fr-01, or any notebook on the web with ?src=<url of a .md file>.
+// Open a lesson with ?lesson=fr-01, or any notebook on the web with ?src=<url of a .md file>.
 import { renderNotebook, parse } from './notebook.js';
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
@@ -12,6 +12,31 @@ const store = {
 };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const article = $('lesson'), nav = $('lessons');
+const BASE = 'https://zcanic.github.io/duploye-transcriber/';
+const lessonHref = (id) => `learn.html?lesson=${encodeURIComponent(id)}`;
+
+// Old links used #fr-02; move them to the indexable ?lesson=fr-02 form.
+{
+  const legacy = location.hash.match(/^#([a-z]{2}-\d{2})$/);
+  if (legacy && !new URLSearchParams(location.search).get('lesson')) history.replaceState(null, '', lessonHref(legacy[1]));
+}
+
+// Per-lesson canonical URL and description, from the lesson's first paragraph.
+function describePage(entry, root) {
+  const set = (sel, attr, value) => { const el = document.head.querySelector(sel); if (el) el.setAttribute(attr, value); };
+  if (entry) {
+    const url = BASE + lessonHref(entry.id);
+    set('link[rel="canonical"]', 'href', url);
+    set('meta[property="og:url"]', 'content', url);
+  }
+  const first = root.querySelector('p:not(.kicker)')?.textContent.trim();
+  if (first) {
+    const d = `Duployé shorthand (sténographie Duployé), lesson ${entry ? entry.n : ''}: ${first}`.slice(0, 300);
+    set('meta[name="description"]', 'content', d);
+    set('meta[property="og:description"]', 'content', d);
+  }
+  set('meta[property="og:title"]', 'content', document.title);
+}
 let index = [];
 let alphaLang = 'fr';
 
@@ -41,7 +66,7 @@ function buildNav() {
   const groups = [...new Set(index.map((l) => l.course))];
   nav.innerHTML = groups.map((course) => `<h2>${esc(course)}</h2><ol>${index.filter((l) => l.course === course).map((l) => l.soon
     ? `<li><a class="soon" aria-disabled="true"><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span><span>soon</span></a></li>`
-    : `<li><a href="#${esc(l.id)}" data-id="${esc(l.id)}"><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span><span class="done" aria-label="read" hidden>✓</span></a></li>`).join('')}</ol>`).join('');
+    : `<li><a href="${lessonHref(l.id)}" data-id="${esc(l.id)}"><span class="n">${esc(l.n)}</span><span>${esc(l.title)}</span><span class="done" aria-label="read" hidden>✓</span></a></li>`).join('')}</ol>`).join('');
   navBuilt = true;
 }
 function syncNav(currentId, lang = cardLang || 'fr') {
@@ -70,7 +95,7 @@ function pager(i) {
   const nav = document.createElement('nav');
   nav.className = 'pager';
   nav.setAttribute('aria-label', 'Lesson navigation');
-  nav.innerHTML = `${prev ? `<a href="#${esc(prev.id)}"><small>Previous</small>${esc(prev.title)}</a>` : ''}${next ? `<a class="next" href="#${esc(next.id)}"><small>Next</small>${esc(next.title)}</a>` : ''}`;
+  nav.innerHTML = `${prev ? `<a href="${lessonHref(prev.id)}"><small>Previous</small>${esc(prev.title)}</a>` : ''}${next ? `<a class="next" href="${lessonHref(next.id)}"><small>Next</small>${esc(next.title)}</a>` : ''}`;
   return nav;
 }
 
@@ -88,7 +113,7 @@ async function show() {
   if (external) {
     url = external;
   } else {
-    const id = decodeURIComponent(location.hash.slice(1)) || live[0]?.id;
+    const id = new URLSearchParams(location.search).get('lesson') || live[0]?.id;
     entry = live.find((l) => l.id === id) || live[0];
     url = `lessons/${entry.file}`;
   }
@@ -124,18 +149,22 @@ async function show() {
     }
     article.classList.add('ready');
     syncNav(entry?.id, meta.lang === 'en' ? 'en' : 'fr');
-    document.title = `${title} · Duployé Lessons`;
-    if (!location.hash.startsWith('#s')) scrollTo({ top: 0, behavior: 'instant' });
+    document.title = `${title} · Duployé shorthand lessons`;
+    describePage(entry, article);
+    if (!location.hash) scrollTo({ top: 0, behavior: 'instant' });
   };
 
   if (firstShow) {
     firstShow = false;
     await window.__pageReveal; // arriving from the canvas: let that transition finish first
     await swap(false);
-  } else if (document.startViewTransition && !reduceMotion.matches) {
+  } else if (document.startViewTransition && !reduceMotion.matches && document.visibilityState === 'visible') {
     const vt = document.startViewTransition(() => swap(true));
     vt.ready.catch(() => {}); // a quick second click aborts the first transition; that is fine
     vt.finished.catch(() => {});
+    // if the browser cannot start the transition (no frames, e.g. a hidden tab), swap without it
+    const fallback = setTimeout(() => vt.skipTransition(), 600);
+    vt.updateCallbackDone.finally(() => clearTimeout(fallback)).catch(() => {});
   } else {
     await swap(true);
   }
@@ -145,7 +174,16 @@ $('menuBtn').addEventListener('click', () => {
   const open = nav.classList.toggle('open');
   $('menuBtn').setAttribute('aria-expanded', String(open));
 });
-addEventListener('hashchange', () => { if (!location.hash.startsWith('#s')) show(); });
+// Lessons have real URLs (learn.html?lesson=fr-02) so search engines can index each one;
+// moving between them stays in the page.
+addEventListener('popstate', () => show());
+document.addEventListener('click', (e) => {
+  const a = e.target.closest?.('a[href^="learn.html?lesson="]');
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+  e.preventDefault();
+  if (a.getAttribute('href') !== `learn.html${location.search}`) history.pushState(null, '', a.getAttribute('href'));
+  show();
+});
 
 (async () => {
   try {

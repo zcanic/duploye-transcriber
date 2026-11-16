@@ -41,3 +41,25 @@
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }
+
+/* ---------- the wordmark and its drawer (src/menu.js) ---------- */
+button.mark { appearance: none; background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; border-radius: 8px; }
+button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.site-menu {
+  position: fixed; z-index: 50; width: 264px; padding: 6px; display: grid; gap: 4px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+  font: 14px/1.35 var(--f-ui); color: var(--ink); transform-origin: 16px 0;
+  animation: site-menu-in .18s cubic-bezier(.2, .8, .2, 1);
+}
+.site-menu.closing { animation: site-menu-out .14s ease-in forwards; }
+@keyframes site-menu-in { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+@keyframes site-menu-out { to { opacity: 0; transform: translateY(-4px) scale(.98); } }
+.site-menu-group { display: grid; }
+.site-menu-group + .site-menu-group { border-top: 1px solid var(--line); padding-top: 4px; }
+.site-menu a { display: grid; gap: 1px; padding: 8px 10px; border-radius: 9px; color: var(--ink); text-decoration: none; }
+.site-menu a:hover, .site-menu a:focus-visible { background: var(--chip); outline: none; }
+.site-menu a span { font-weight: 500; }
+.site-menu a i { font-style: normal; color: var(--muted); font-size: 12px; }
+.site-menu a small { color: var(--muted); font-size: 12px; }
+.site-menu a[aria-current="page"] span { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) { .site-menu, .site-menu.closing { animation: none; } }

@@ -51,7 +51,8 @@ async function update({ inkAll = false } = {}) {
   const items = buildItems(state.text, system, { useSigles: state.sigles, overrides: langOverrides() });
   await prepare(items, system);
   if (n !== updateSeq) return;
-  content = sheet.set(items, system, { inkAll });
+  const size = sheet.set(items, system, { inkAll });
+  content = { w: Math.max(size.used || 0, 320), h: size.h }; // fit what is written, so short texts are not tiny
   model = items;
   syncSelection();
   const words = items.filter((i) => i.kind === 'word');
