@@ -30,10 +30,21 @@ if (mark) {
     `<a href="${esc(href)}"${ext ? ' target="_blank" rel="noopener"' : ''}${here(href) ? ' aria-current="page"' : ''}><span>${esc(label)}${ext ? ' <i aria-hidden="true">↗</i>' : ''}</span><small>${esc(note)}</small></a>`).join('')}</div>`).join('');
   document.body.append(menu);
 
+  // Open below the whole bar or header that holds the wordmark (never over it),
+  // with the link text lined up under the wordmark, inside the page gutter.
+  const host = mark.closest('header, .float') || mark;
+  // measures the phone's side safe areas: left offset = left inset, width = right inset
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:fixed;top:0;height:0;visibility:hidden;pointer-events:none;left:env(safe-area-inset-left,0px);width:env(safe-area-inset-right,0px)';
+  document.body.append(probe);
   const place = () => {
-    const r = mark.getBoundingClientRect();
-    menu.style.left = `${Math.max(8, Math.min(r.left - 8, innerWidth - menu.offsetWidth - 8))}px`;
-    menu.style.top = `${r.bottom + 10}px`;
+    const h = host.getBoundingClientRect(), r = mark.getBoundingClientRect();
+    // share an edge: with the floating toolbar on the canvas, with the wordmark under a page header
+    const edge = host.classList.contains('float') ? h.left : r.left;
+    const minLeft = probe.offsetLeft, maxLeft = innerWidth - menu.offsetWidth - Math.max(16, probe.offsetWidth);
+    menu.style.left = `${Math.round(Math.max(minLeft, Math.min(edge, maxLeft)))}px`;
+    menu.style.top = `${Math.round(h.bottom + 8)}px`;
   };
   const isOpen = () => !menu.hidden && !menu.classList.contains('closing');
   const open = () => {
