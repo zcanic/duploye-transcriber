@@ -31,6 +31,9 @@ const EXCEPTIONS = {
   oignon: 'o GN on', hier: 'i é R', pays: 'P é i', gens: 'J an', sens: 'S an S', tabac: 'T a B a',
   second: 'S eu G on', seconde: 'S eu G on D', examen: 'é G Z a M in', album: 'a L B o M',
   monsieur_: '', // placeholder to keep the list sorted mentally
+  // common verbs in -ent (3rd person plural) met without "ils"/"elles" before them
+  peuvent: 'P eu V', veulent: 'V eu L', doivent: 'D a V', furent: 'F u R', eurent: 'u R', firent: 'F i R',
+  savent: 'S a V', disent: 'D i Z', prennent: 'P R é N', viennent: 'V i é N', font: 'F on', sont: 'S on',
   client: 'K L i an', clients: 'K L i an', patient: 'P a S i an', science: 'S i an S',
   orient: 'o R i an', ancien: 'an S i in', sœur: 'S eu R', soeur: 'S eu R', cœur: 'K eu R', coeur: 'K eu R',
   plus: 'P L u', tous: 'T ou S', ours: 'ou R S', mars: 'M a R S', hélas: 'é L a S', bus: 'B u S',
@@ -71,8 +74,9 @@ function stripEnding(w, ctx) {
 }
 
 // Is the grapheme at w[i..i+len) a nasal vowel? Only if not followed by a vowel or by n/m.
-function nasalOK(w, i, len) {
-  const next = w[i + len];
+// `at` looks past the stripped ending, so the mute e of "dune", "dame", "aime" still counts.
+function nasalOK(w, i, len, at = (k) => w[k]) {
+  const next = at(i + len);
   if (next === undefined) return true;
   if (isV(next)) return false;
   if (next === 'n' || next === 'm') {
@@ -119,15 +123,16 @@ export function wordToPhonemes(raw, ctx = {}) {
     if (/^(euill|euil$)/.test(r)) { push('eu', 'i'); i += r.startsWith('euill') ? 5 : 4; continue; }
     if (/^(ueill|ueil$)/.test(r)) { push('eu', 'i'); i += r.startsWith('ueill') ? 5 : 4; continue; }
     if (/^(ouill|ouil$)/.test(r)) { push('ou', 'i'); i += r.startsWith('ouill') ? 5 : 4; continue; }
-    if (r.startsWith('ill') && i > 0 && !isV(prev)) { push('i'); i += 3; continue; } // fille, billet
-    if (/^(ain|aim|ein)/.test(r) && nasalOK(w, i, 3)) { push('in'); i += 3; continue; }
-    if (r.startsWith('oin') && nasalOK(w, i, 3)) { push('ou', 'in'); i += 3; continue; }
-    if (r.startsWith('ien') && nasalOK(w, i, 3)) { push('i', 'in'); i += 3; continue; }
-    if (r.startsWith('éen') && nasalOK(w, i, 3)) { push('é', 'in'); i += 3; continue; }
-    if (/^(an|am|en|em)/.test(r) && nasalOK(w, i, 2)) { push('an'); i += 2; continue; }
-    if (/^(on|om)/.test(r) && nasalOK(w, i, 2)) { push('on'); i += 2; continue; }
-    if (/^(in|im|yn|ym)/.test(r) && nasalOK(w, i, 2)) { push('in'); i += 2; continue; }
-    if (/^(un|um)/.test(r) && nasalOK(w, i, 2)) { push('un'); i += 2; continue; }
+    if (r.startsWith('ill') && i > 0 && !isV(prev)) { if (out[out.length - 1] !== 'i') push('i'); i += 3; continue; } // fille, billet
+    if (/^(ain|aim|ein)/.test(r) && nasalOK(w, i, 3, at)) { push('in'); i += 3; continue; }
+    if (r.startsWith('oin') && nasalOK(w, i, 3, at)) { push('ou', 'in'); i += 3; continue; }
+    if (r.startsWith('eun') && nasalOK(w, i, 3, at)) { push('un'); i += 3; continue; } // à jeun
+    if (r.startsWith('ien') && nasalOK(w, i, 3, at)) { push('i', 'in'); i += 3; continue; }
+    if (r.startsWith('éen') && nasalOK(w, i, 3, at)) { push('é', 'in'); i += 3; continue; }
+    if (/^(an|am|en|em)/.test(r) && nasalOK(w, i, 2, at)) { push('an'); i += 2; continue; }
+    if (/^(on|om)/.test(r) && nasalOK(w, i, 2, at)) { push('on'); i += 2; continue; }
+    if (/^(in|im|yn|ym)/.test(r) && nasalOK(w, i, 2, at)) { push('in'); i += 2; continue; }
+    if (/^(un|um)/.test(r) && nasalOK(w, i, 2, at)) { push('un'); i += 2; continue; }
     if (/^oy[aeiou]/.test(r)) { push('a', 'i'); i += 2; continue; } // voyage
     if (/^ay[aeiou]/.test(r)) { push('é', 'i'); i += 2; continue; } // payer
     if (/^(oi|oî)/.test(r)) { push('a'); i += 2; continue; } // oi is written as a
@@ -150,7 +155,7 @@ export function wordToPhonemes(raw, ctx = {}) {
     if (r.startsWith('th')) { push('T'); i += 2; continue; }
     if (r.startsWith('gn')) { push('GN'); i += 2; continue; }
     if (r.startsWith('qu')) { push('K'); i += 2; continue; }
-    if (r.startsWith('gu') && FRONT.includes(w[i + 2] ?? '#')) { push('G'); i += 2; continue; }
+    if (r.startsWith('gu') && FRONT.includes(at(i + 2) ?? '#')) { push('G'); i += 2; continue; } // guerre, Hugues
     if (r.startsWith('ge') && 'aoouâô'.includes(w[i + 2] ?? '#')) { push('J'); i += 2; continue; } // mangeons
     if (/^(tion|tiel|tieu)/.test(r) && prev !== 's' && i > 0) { push('S', 'i'); i += 2; continue; }
     if (r.startsWith('cc') && FRONT.includes(w[i + 2] ?? '#')) { push('K', 'S'); i += 2; continue; }
@@ -175,6 +180,5 @@ export function wordToPhonemes(raw, ctx = {}) {
     }
     i += 1; // apostrophes, hyphens, digits, unknown
   }
-  // collapse repeated vowels (fille -> F i i -> F i); repeated consonants are real (dedans = D D an)
-  return out.filter((t, k) => !(t === out[k - 1] && VOWELS.includes(t)));
+  return out;
 }

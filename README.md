@@ -72,12 +72,7 @@ Attributes: `lang` (`fr` or `en`), `gloss`, `nosigles`, `size` (px per em), `wid
 ## Limitations
 
 - **Sounds**: rule-based with a small exception list, not a pronunciation dictionary. On the word lists of the manual it is right almost every time; on arbitrary text, expect to correct some words, especially loanwords, *-ent* nouns versus verbs, and *-er* words with a sounded r.
-- **Drawing**: done by the [Noto Sans Duployan](https://github.com/notofonts/duployan) font, which implements the *generic* Unicode Duployan joining model, not every convention of French manuals. It does not always follow these:
-  - *i* turns right and *é* turns left;
-  - a vowel goes outside the angle formed by two consonants;
-  - the nasals an / in / on / un sit in fixed quarter-circle quadrants.
-
-  Use the output to learn how words break into sounds and to see their overall shape. For exact calligraphy, follow your manual.
+- **Drawing**: done by the [Noto Sans Duployan](https://github.com/notofonts/duployan) font, which implements the generic Unicode Duployan joining model. Checked against the manual's own examples, it follows the French rules for circle vowels (*coke*, *poupe*, *amas*), for final *i* / *é* (*qui*/*quai*, *dit*/*des*), and for final *u* / *eu* and final nasals (*pu*/*peut*, *pan*/*pont*). Word-initial nasals and some medial vowels could not all be checked; where the drawing and your manual disagree, follow the manual.
 - Only the core alphabet and the first sigles are covered. The methods' many further abbreviations and affixes are not, nor Sloan's thickened strokes for an added r.
 - **English specifics**: pronunciations are American (CMU), while Sloan wrote British English, so a few vowels differ from the manual. Unicode has no code point for Sloan's *y*, so it is written with the *i* hook, and the five small-quadrant nasals (ăn ĕn ĭn ŏn ŭn) use the closest Unicode nasal letters.
 
@@ -136,4 +131,4 @@ Code: MIT. Font: SIL Open Font License 1.1. harfbuzzjs: MIT. CMUdict: BSD-style 
 
 ### 中文简介
 
-输入法语或英语，在点阵纸上一笔一笔写成 Duployé 速记。内置中文课程（learn.html）用 Markdown 笔记本格式编写，里面的速记格子可以编辑、重放，练习题点击后才显示答案；任何人都可以用同样的格式写自己的课程。英语用的是 Sloan-Duployan 体系，读音查 CMU 发音词典，查不到的词按拼写猜并标出来。流程是：先按 Duployé 的规则把单词拆成音，每个词的音都可以手动改；再交给 Noto Sans Duployan 字体负责连写和元音转向。拆音规则基于教材 *Sténographie intégrale*。字体实现的是 Unicode 的通用 Duployan 模型，所以 é/i 的转向、元音画在角外侧、鼻元音的象限这些细节不一定和法语教材完全一致，书写时以教材为准。
+输入法语或英语，在点阵纸上一笔一笔写成 Duployé 速记。内置中文课程（learn.html）用 Markdown 笔记本格式编写，里面的速记格子可以编辑、重放，练习题点击后才显示答案；任何人都可以用同样的格式写自己的课程。英语用的是 Sloan-Duployan 体系，读音查 CMU 发音词典，查不到的词按拼写猜并标出来。流程是：先按 Duployé 的规则把单词拆成音，每个词的音都可以手动改；再交给 Noto Sans Duployan 字体负责连写和元音转向。拆音规则基于教材 *Sténographie intégrale*。我对照教材例词核对过：圆形元音的位置、词尾 é/i 和 u/eu 的朝向、词尾鼻元音，字体都与教材一致；词首鼻元音和部分词中元音没能逐一核对，与教材不同时以教材为准。

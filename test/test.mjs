@@ -28,7 +28,7 @@ const CASES = {
   ombre: 'on B R', ranger: 'R an J é', compte: 'K on T', monde: 'M on D', banque: 'B an K',
   // general
   'sténographie': 'S T é N o G R a F i', petite: 'P T i T', parler: 'P a R L é', fille: 'F i', travail: 'T R a V a i',
-  soleil: 'S o L é i', dedans: 'D D an', repose: 'R P o Z', voisin: 'V a Z in', emmurer: 'an M u R é', haineux: 'é N eu', nation: 'N a S i on', examen: 'é G Z a M in', taxi: 'T a K S i', accord: 'a K o R', accroc: 'a K R o K', accent: 'a K S an', lorsque: 'L o R S K', ville: 'V i L',
+  soleil: 'S o L é i', dedans: 'D D an', repose: 'R P o Z', voisin: 'V a Z in', emmurer: 'an M u R é', haineux: 'é N eu', nation: 'N a S i on', examen: 'é G Z a M in', taxi: 'T a K S i', créer: 'K R é é', jeun: 'J un', Hugues: 'u G', peuvent: 'P eu V', furent: 'F u R', fille: 'F i', billet: 'B i é', dune: 'D u N', une: 'u N', dame: 'D a M', plume: 'P L u M', aime: 'é M', fine: 'F i N', aucune: 'o K u N', dames: 'D a M', faim: 'F in', accord: 'a K o R', accroc: 'a K R o K', accent: 'a K S an', lorsque: 'L o R S K', ville: 'V i L',
 };
 
 let fail = 0;

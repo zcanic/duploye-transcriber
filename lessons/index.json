@@ -1,8 +1,44 @@
 [
-  { "id": "fr-01", "n": "01", "course": "Duployé · 法语", "title": "字母表与第一批缩写", "file": "fr/01-alphabet.md" },
-  { "id": "fr-02", "n": "02", "course": "Duployé · 法语", "title": "圆形元音 a · o · ou", "file": "fr/02-voyelles-cercle.md" },
-  { "id": "fr-03", "n": "03", "course": "Duployé · 法语", "title": "半圆元音 é · i 与省音", "soon": true },
-  { "id": "fr-04", "n": "04", "course": "Duployé · 法语", "title": "大四分之一圆 u · eu", "soon": true },
-  { "id": "fr-05", "n": "05", "course": "Duployé · 法语", "title": "鼻元音 an · in · on · un", "soon": true },
-  { "id": "fr-06", "n": "06", "course": "Duployé · 法语", "title": "综合读写", "soon": true }
+  {
+    "id": "fr-01",
+    "n": "01",
+    "course": "Duployé · 法语",
+    "title": "字母表与第一批缩写",
+    "file": "fr/01-alphabet.md"
+  },
+  {
+    "id": "fr-02",
+    "n": "02",
+    "course": "Duployé · 法语",
+    "title": "圆形元音 a · o · ou",
+    "file": "fr/02-voyelles-cercle.md"
+  },
+  {
+    "id": "fr-03",
+    "n": "03",
+    "course": "Duployé · 法语",
+    "title": "半圆元音 é · i 与省音",
+    "file": "fr/03-voyelles-demi-cercle.md"
+  },
+  {
+    "id": "fr-04",
+    "n": "04",
+    "course": "Duployé · 法语",
+    "title": "大四分之一圆 u · eu",
+    "file": "fr/04-voyelles-quart-de-cercle.md"
+  },
+  {
+    "id": "fr-05",
+    "n": "05",
+    "course": "Duployé · 法语",
+    "title": "鼻元音 an · in · on · un",
+    "file": "fr/05-nasales.md"
+  },
+  {
+    "id": "fr-06",
+    "n": "06",
+    "course": "Duployé · 法语",
+    "title": "综合读写",
+    "file": "fr/06-synthese.md"
+  }
 ]
