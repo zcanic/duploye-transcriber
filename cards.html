@@ -15,6 +15,7 @@
   addEventListener('pagereveal', (e) => {
     if (!e.viewTransition) return;
     e.viewTransition.types.add('to-lessons');
+    e.viewTransition.ready.catch(() => {}); // an interrupted transition is not an error
     window.__pageReveal = e.viewTransition.finished.catch(() => {}); // heavy work waits for this
   });
 </script>

@@ -129,8 +129,11 @@ async function show() {
     await window.__pageReveal; // arriving from the canvas: let that transition finish first
     await swap(false);
   } else if (document.startViewTransition && !reduceMotion.matches) {
-    try { document.startViewTransition({ update: () => swap(true), types: ['lesson'] }); }
-    catch { document.startViewTransition(() => swap(true)); } // browsers without transition types
+    let vt;
+    try { vt = document.startViewTransition({ update: () => swap(true), types: ['lesson'] }); }
+    catch { vt = document.startViewTransition(() => swap(true)); } // browsers without transition types
+    vt.ready.catch(() => {}); // a quick second click aborts the first transition; that is fine
+    vt.finished.catch(() => {});
   } else {
     await swap(true);
   }
