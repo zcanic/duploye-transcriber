@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duployé Transcriber</title>
+<meta name="description" content="Write French in Duployé shorthand: French text → phonemes → Duployan script, with editable phonemes.">
+<style>
+  @font-face {
+    font-family: "Noto Sans Duployan";
+    src: url("fonts/NotoSansDuployan-Regular.ttf") format("truetype");
+    font-display: block;
+  }
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1d1c1a; --muted: #6b6760; --line: #e4e0d8;
+    --accent: #1f5f8b; --accent-soft: #e6f0f7; --warn: #a3381f; --warn-soft: #fbece8; --chip: #f2efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a29f97; --line: #34332f;
+      --accent: #7fb6dd; --accent-soft: #1d2e3a; --warn: #f0957d; --warn-soft: #3a2420; --chip: #2a2926;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161614; --panel: #1f1f1c; --ink: #ecebe6; --muted: #a29f97; --line: #34332f;
+    --accent: #7fb6dd; --accent-soft: #1d2e3a; --warn: #f0957d; --warn-soft: #3a2420; --chip: #2a2926;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 22px; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 18px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+  textarea { width: 100%; min-height: 96px; resize: vertical; font: 16px/1.5 system-ui, sans-serif; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  textarea:focus, input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: center; margin-top: 10px; color: var(--muted); font-size: 14px; }
+  .controls label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+  button { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--chip); color: var(--ink);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  .steno { font-family: "Noto Sans Duployan", sans-serif; color: var(--ink); }
+  #out { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35em 0.6em; line-height: 2.4; min-height: 80px; overflow-wrap: anywhere; }
+  #out .w { position: relative; display: inline-block; padding: 0 .05em; border-radius: 6px; cursor: default; }
+  #out .w:hover { background: var(--accent-soft); }
+  #out .w.proper { text-decoration: underline; text-underline-offset: .15em; }
+  #out .num { font-family: system-ui, sans-serif; text-decoration: underline; font-size: .45em; }
+  #out .sep { font-family: system-ui, sans-serif; color: var(--muted); font-size: .4em; }
+  .tip { position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%); white-space: nowrap; font: 12px/1.3 system-ui, sans-serif;
+    background: var(--ink); color: var(--bg); padding: 3px 7px; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity .1s; }
+  #out .w:hover .tip { opacity: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  td { padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  td.fr { white-space: nowrap; }
+  td.gl { font-size: 26px; line-height: 1.6; min-width: 60px; }
+  td input { width: 100%; min-width: 120px; font: 14px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; }
+  td input.edited { border-color: var(--accent); background: var(--accent-soft); }
+  td input.bad { border-color: var(--warn); background: var(--warn-soft); }
+  .badge { display: inline-block; font-size: 11px; padding: 1px 6px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); margin-left: 6px; }
+  .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap: 8px; }
+  .legend div { text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 4px; }
+  .legend .steno { font-size: 30px; line-height: 1.5; display: block; height: 46px; }
+  .legend code { font-size: 13px; }
+  .legend small { display: block; color: var(--muted); font-size: 11px; }
+  .note { font-size: 13.5px; color: var(--muted); }
+  .note strong { color: var(--ink); }
+  .scroll { overflow-x: auto; }
+  a { color: var(--accent); }
+  footer { color: var(--muted); font-size: 13px; margin-top: 28px; }
+  @media (max-width: 560px) { h1 { font-size: 22px; } td.gl { font-size: 22px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Duployé Transcriber</h1>
+  <p class="sub">French text → sounds → <em>sténographie Duployé</em>. Every word's sounds are editable, because French spelling is full of exceptions.</p>
+
+  <section class="panel">
+    <h2>French text</h2>
+    <textarea id="src" spellcheck="false">On a. Ils ont eu. Il a eu un an. Où est-il ? Est-il en haut ? On en a eu un grand pour nous tous. Tout est pour vous et pour eux. Que faire pour bien faire ? Un pour tous, tous pour un.</textarea>
+    <div class="controls">
+      <label><input type="checkbox" id="sigles" checked> Use abbreviations (sigles)</label>
+      <label>Size <input type="range" id="size" min="28" max="96" value="52"></label>
+      <button id="copy" type="button">Copy Unicode</button>
+      <button id="reset" type="button">Reset edits</button>
+      <span id="msg" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Shorthand</h2>
+    <div id="out" class="steno"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Words and sounds</h2>
+    <p class="note">Edit the sounds of a word (space-separated, using the symbols below) and every occurrence updates. <span class="badge">sigle</span> marks an abbreviation.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>Word</th><th>Sounds</th><th>Duployé</th></tr></thead>
+      <tbody id="words"></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel">
+    <h2>Sound symbols</h2>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <section class="panel note">
+    <h2>What to trust</h2>
+    <p><strong>The sounds column follows the rules of the French Duployé method:</strong> silent letters and mute <em>e</em> are dropped, [e]/[ɛ] are both <code>é</code>, <em>oi</em> is written <code>a</code>, <em>ui</em> is written <code>i</code>, and elided letters (<em>l', j'</em>…) join the next word only when it is a monosyllable or starts with a circle vowel. The rules are a best guess. Check unusual words.</p>
+    <p><strong>The drawing comes from the Noto Sans Duployan font</strong>, which joins letters and turns vowels using the generic Unicode Duployan model. The French manuals add finer conventions that the font does not always follow: <em>i</em> turns right and <em>é</em> turns left, a vowel goes outside the angle between two consonants, and the nasal vowels use quarter-circle quadrants. Use the output to check how words are broken into sounds and to see the overall shape. For exact calligraphy, follow your manual.</p>
+  </section>
+
+  <footer>
+    Font: <a href="https://github.com/notofonts/duployan">Noto Sans Duployan</a> (SIL OFL 1.1). Rules after <em>Sténographie intégrale</em> (Duployé method).
+  </footer>
+</main>
+
+<script type="module">
+import { transcribe, toDuployan, parsePhonemes } from './src/duploye.js';
+import { CONSONANTS, VOWELS } from './src/g2p.js';
+
+const $ = (id) => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+let overrides = store.get('duploye.overrides', {}); // lowercased word -> "P o"
+$('src').value = store.get('duploye.text', $('src').value);
+
+const HINTS = { a: 'small circle', o: 'large circle', ou: 'circle + dot', 'é': 'é / è / ai', i: 'i / y', u: '[y]', eu: '[ø] [œ]',
+  an: 'an / en', in: 'in / ain', on: 'on', un: 'un', GN: 'gn', CH: 'ch', J: 'j / ge', S: 's / ç', Z: 'z / s', K: 'c / qu' };
+$('legend').innerHTML = [...CONSONANTS, ...VOWELS].map((t) =>
+  `<div><span class="steno">${toDuployan([t])}</span><code>${t}</code>${HINTS[t] ? `<small>${HINTS[t]}</small>` : ''}</div>`).join('');
+
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function effective(item) {
+  const key = item.text.toLowerCase();
+  if (!item.sigle && !item.elided && overrides[key] !== undefined) return { ...item, tokens: parsePhonemes(overrides[key]).tokens, edited: true };
+  return item;
+}
+
+let unicodeOut = '';
+function render() {
+  const text = $('src').value;
+  store.set('duploye.text', text);
+  const sentences = transcribe(text, { useSigles: $('sigles').checked }).map((s) => s.map(effective));
+  $('out').style.fontSize = $('size').value + 'px';
+
+  const html = [];
+  const uni = [];
+  sentences.forEach((sent, si) => {
+    if (si) { html.push('<span class="sep">×</span>'); uni.push(' × '); }
+    // merge elided letters with the word they join, so the font connects them in one stroke
+    const groups = [];
+    let pending = null;
+    for (const it of sent) {
+      if (it.number) { groups.push(it); pending = null; continue; }
+      const g = pending ?? { text: '', tokens: [], properNoun: false };
+      g.text += (pending ? '' : '') + it.text;
+      g.tokens = g.tokens.concat(it.tokens);
+      g.properNoun ||= it.properNoun;
+      if (it.joinToNext) { pending = g; } else { groups.push(g); pending = null; }
+    }
+    if (pending) groups.push(pending);
+    groups.forEach((it) => {
+      if (it.number) { html.push(`<span class="num">${esc(it.text)}</span>`); uni.push(it.text + ' '); return; }
+      const glyphs = toDuployan(it.tokens);
+      html.push(`<span class="w${it.properNoun ? ' proper' : ''}">${glyphs}<span class="tip">${esc(it.text)} · ${esc(it.tokens.join(' '))}</span></span>`);
+      uni.push(glyphs + ' ');
+    });
+  });
+  $('out').innerHTML = html.join('');
+  unicodeOut = uni.join('').trim();
+
+  // word table (unique words, first occurrence order)
+  const seen = new Map();
+  sentences.flat().forEach((it) => { if (!it.number && !seen.has(it.text.toLowerCase() + (it.sigle ? '*' : ''))) seen.set(it.text.toLowerCase() + (it.sigle ? '*' : ''), it); });
+  $('words').innerHTML = [...seen.values()].map((it) => {
+    const key = it.text.toLowerCase();
+    const val = it.sigle ? it.tokens.join(' ') : (overrides[key] ?? it.tokens.join(' '));
+    const bad = parsePhonemes(val).bad.length > 0;
+    const cls = [it.edited ? 'edited' : '', bad ? 'bad' : ''].join(' ');
+    return `<tr><td class="fr">${esc(it.text)}${it.sigle ? '<span class="badge">sigle</span>' : ''}</td>
+      <td><input type="text" class="${cls}" data-key="${esc(key)}" value="${esc(val)}" ${it.sigle || it.elided ? 'disabled' : ''} aria-label="sounds of ${esc(it.text)}"></td>
+      <td class="gl steno">${toDuployan(it.tokens)}</td></tr>`;
+  }).join('');
+}
+
+$('words').addEventListener('change', (e) => {
+  const inp = e.target.closest('input[data-key]');
+  if (!inp) return;
+  overrides[inp.dataset.key] = inp.value.trim();
+  store.set('duploye.overrides', overrides);
+  render();
+});
+$('src').addEventListener('input', render);
+$('sigles').addEventListener('change', render);
+$('size').addEventListener('input', () => { $('out').style.fontSize = $('size').value + 'px'; });
+$('reset').addEventListener('click', () => { overrides = {}; store.set('duploye.overrides', overrides); render(); });
+$('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(unicodeOut); $('msg').textContent = 'Copied (needs a Duployan font to display).'; }
+  catch { $('msg').textContent = 'Copy failed.'; }
+  setTimeout(() => ($('msg').textContent = ''), 2500);
+});
+document.fonts.ready.then(render);
+render();
+</script>
+</body>
+</html>
