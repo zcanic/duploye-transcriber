@@ -11,10 +11,9 @@
 <link rel="preload" href="fonts/NotoSansDuployan-Regular.ttf" as="fetch" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="src/cards.css">
 <script>
-  // Tell the page transition which way we are going, before the first frame.
+  // Let heavy work wait until the page cross-fade has finished.
   addEventListener('pagereveal', (e) => {
     if (!e.viewTransition) return;
-    e.viewTransition.types.add('to-lessons');
     e.viewTransition.ready.catch(() => {}); // an interrupted transition is not an error
     window.__pageReveal = e.viewTransition.finished.catch(() => {}); // heavy work waits for this
   });
