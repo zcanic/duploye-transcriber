@@ -91,6 +91,7 @@ button { font: inherit; color: inherit; }
 .steno .g { fill: var(--ink); }
 .steno .gloss, .steno .hit { display: none; }
 .word .g { fill: var(--ink); }
+.word .g.accent, svg.glyph path.accent { fill: var(--accent); } /* house-rule accent on open vowels */
 .word { transition: none; }
 .prompt-zh { font-size: 26px; font-weight: 500; line-height: 1.35; text-wrap: balance; }
 .prompt-fr { font: italic 38px/1.1 var(--f-display); text-wrap: balance; }

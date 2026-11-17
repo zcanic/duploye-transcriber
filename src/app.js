@@ -26,6 +26,8 @@ const state = {
   gloss: store.get('duploye.gloss', true),
   // shortcuts that trade information for speed (sigles / word signs, oi -> a, ui -> i, silent h): off by default
   sigles: store.get('duploye.shortcuts', false) === true,
+  // house rule: mark open vowels è ò œ (French only); on by default, for learners
+  accents: store.get('duploye.accents', true) !== false,
   sel: null,                    // { text: lowercased, n: occurrence }
 };
 const view = { x: 0, y: 0, k: 1 };
@@ -49,7 +51,7 @@ let updateSeq = 0;
 async function update({ inkAll = false } = {}) {
   const n = ++updateSeq;
   const system = sys();
-  const items = buildItems(state.text, system, { useSigles: state.sigles, overrides: langOverrides() });
+  const items = buildItems(state.text, system, { useSigles: state.sigles, accents: state.accents, overrides: langOverrides() });
   await prepare(items, system);
   if (n !== updateSeq) return;
   const size = sheet.set(items, system, { inkAll });
@@ -325,6 +327,7 @@ $('zoomIn').addEventListener('click', () => { const v = { ...view }; const k = c
 $('zoomOut').addEventListener('click', () => { const v = { ...view }; const k = clamp(v.k / 1.25, 0.2, 5), cx = innerWidth / 2, cy = innerHeight / 2; animateView({ k, x: cx - (cx - v.x) * k / v.k, y: cy - (cy - v.y) * k / v.k }, 260); });
 $('zoomPct').addEventListener('click', () => fit());
 $('gloss').addEventListener('click', () => { state.gloss = !state.gloss; store.set('duploye.gloss', state.gloss); setToggle('gloss', state.gloss); update(); });
+$('accents').addEventListener('click', () => { state.accents = !state.accents; store.set('duploye.accents', state.accents); setToggle('accents', state.accents); update(); });
 $('sigles').addEventListener('click', () => { state.sigles = !state.sigles; store.set('duploye.shortcuts', state.sigles); setToggle('sigles', state.sigles); update(); });
 $('alpha').addEventListener('click', () => {
   const d = $('drawer');
@@ -383,6 +386,7 @@ function syncLangUI() {
   for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === state.lang));
   src.placeholder = sys().placeholder;
   document.documentElement.lang = state.lang;
+  $('accents').hidden = state.lang === 'en'; // the house rule is for French vowels
   $('sigles').title = state.lang === 'en' ? 'Shortcuts: word signs, the aspirate h left out' : 'Shortcuts: sigles, oi written as a, ui written as i';
 }
 async function loadSystem() {
@@ -446,6 +450,7 @@ async function boot() {
   syncLangUI();
   setToggle('gloss', state.gloss);
   setToggle('sigles', state.sigles);
+  setToggle('accents', state.accents);
   $('status').textContent = 'Loading the pen…';
   try {
     await Promise.all([loadFont(new URL('../fonts/NotoSansDuployan-Regular.ttf', import.meta.url).href), document.fonts.ready]);

@@ -62,6 +62,7 @@
     <button id="zoomIn" class="tool icon" type="button" title="Zoom in (+)" aria-label="Zoom in"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M10 5v10"/></svg></button>
     <span class="sep" aria-hidden="true"></span>
     <button id="gloss" class="tool toggle" type="button" aria-pressed="true" title="Show French under each word (G)">Gloss</button>
+    <button id="accents" class="tool toggle" type="button" aria-pressed="true" title="Mark open vowels è [ɛ], ò [ɔ], œ [œ] with an accent (house rule, not in the manual)">Accents</button>
     <button id="sigles" class="tool toggle" type="button" aria-pressed="false" title="Shortcuts: sigles, oi written as a, ui written as i">Sigles</button>
     <button id="alpha" class="tool toggle" type="button" aria-pressed="false" title="Alphabet (A)">Alphabet</button>
     <span class="sep" aria-hidden="true"></span>
@@ -111,6 +112,8 @@
     for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
     if (get('duploye.gloss') === false) document.getElementById('gloss').setAttribute('aria-pressed', 'false');
     if (get('duploye.shortcuts') === true) document.getElementById('sigles').setAttribute('aria-pressed', 'true');
+    if (get('duploye.accents') === false) document.getElementById('accents').setAttribute('aria-pressed', 'false');
+    document.getElementById('accents').hidden = lang === 'en';
     src.style.height = src.scrollHeight + 'px';
   })();
 </script>

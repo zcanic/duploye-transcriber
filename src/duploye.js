@@ -11,6 +11,8 @@ export const CODEPOINTS = {
   Z: 0x1bc25, // S WITH DOT
   a: 0x1bc41, o: 0x1bc44, ou: 0x1bc5b, i: 0x1bc46, 'é': 0x1bc47, u: 0x1bc51, eu: 0x1bc52,
   an: 0x1bc64, in: 0x1bc63, on: 0x1bc62, un: 0x1bc61,
+  // house rule: open vowels carry a grave accent (combining U+0300) on the sign
+  'è': [0x1bc47, 0x300], 'ò': [0x1bc44, 0x300], 'œ': [0x1bc52, 0x300],
 };
 
 // Arbitrary abbreviations ("sigles") taught on p.3 of Sténographie intégrale.
@@ -24,10 +26,10 @@ export const SIGLES = {
 
 const ELIDED = { c: ['S'], d: ['D'], j: ['J'], l: ['L'], m: ['M'], n: ['N'], s: ['S'], t: ['T'], qu: ['K'], jusqu: ['J', 'u', 'S', 'K'], lorsqu: ['L', 'o', 'R', 'S', 'K'], puisqu: ['P', 'i', 'S', 'K'] };
 const SUBJECT_PRONOUNS = new Set(['ils', 'elles', "qu'ils", "qu'elles"]);
-const CIRCLE_VOWELS = new Set(['a', 'o', 'ou']);
-const VOWEL_SET = new Set(['a', 'o', 'ou', 'é', 'i', 'u', 'eu', 'an', 'in', 'on', 'un']);
+const CIRCLE_VOWELS = new Set(['a', 'o', 'ou', 'ò']);
+const VOWEL_SET = new Set(['a', 'o', 'ou', 'é', 'i', 'u', 'eu', 'an', 'in', 'on', 'un', 'è', 'ò', 'œ']);
 
-export const toDuployan = (tokens) => tokens.map((t) => String.fromCodePoint(CODEPOINTS[t])).join('');
+export const toDuployan = (tokens) => tokens.map((t) => String.fromCodePoint(...[].concat(CODEPOINTS[t]))).join('');
 
 export function parsePhonemes(text) {
   const toks = text.trim().split(/\s+/).filter(Boolean);
@@ -37,7 +39,7 @@ export function parsePhonemes(text) {
 
 // Split text into sentences of word items.
 // Each item: { text, tokens, sigle, properNoun, joinToNext }
-export function transcribe(text, { useSigles = true } = {}) {
+export function transcribe(text, { useSigles = true, accents = false } = {}) {
   const sentences = [];
   const parts = text.normalize('NFC').replace(/’/g, "'").split(/(?<=[.!?;:])\s+|\n+/);
   for (const part of parts) {
@@ -54,9 +56,9 @@ export function transcribe(text, { useSigles = true } = {}) {
         const m = piece.match(/^(c|d|j|l|m|n|s|t|qu|jusqu|lorsqu|puisqu)'(.+)$/i);
         if (m) {
           items.push({ text: m[1] + "'", tokens: ELIDED[m[1].toLowerCase()], elided: true });
-          pushWord(items, m[2], prevWord, idx, useSigles);
+          pushWord(items, m[2], prevWord, idx, useSigles, accents);
         } else {
-          pushWord(items, piece, prevWord, idx, useSigles);
+          pushWord(items, piece, prevWord, idx, useSigles, accents);
         }
         prevWord = piece.toLowerCase();
       }
@@ -75,13 +77,13 @@ export function transcribe(text, { useSigles = true } = {}) {
   return sentences;
 }
 
-function pushWord(items, word, prevWord, idx, useSigles) {
+function pushWord(items, word, prevWord, idx, useSigles, accents) {
   const lower = word.toLowerCase();
   const isCap = /^\p{Lu}/u.test(word) && idx > 0 && lower !== 'monsieur';
   if (useSigles && SIGLES[lower]) {
     items.push({ text: word, tokens: SIGLES[lower], sigle: true });
     return;
   }
-  const tokens = wordToPhonemes(word, { afterSubjectPronoun: SUBJECT_PRONOUNS.has(prevWord), shortcuts: useSigles });
+  const tokens = wordToPhonemes(word, { afterSubjectPronoun: SUBJECT_PRONOUNS.has(prevWord), shortcuts: useSigles, fine: accents });
   items.push({ text: word, tokens, properNoun: isCap });
 }

@@ -20,7 +20,7 @@ export const el = (tag, attrs = {}, text) => {
  * Text -> word items, merging elided letters with the word they join.
  * @param overrides map of lowercased word -> "P o" (the learner's own sounds)
  */
-export function buildItems(text, sys, { useSigles = true, overrides = {} } = {}) {
+export function buildItems(text, sys, { useSigles = true, accents = false, overrides = {} } = {}) {
   const items = [];
   const withOverride = (raw) => {
     const k = raw.text.toLowerCase();
@@ -29,7 +29,7 @@ export function buildItems(text, sys, { useSigles = true, overrides = {} } = {})
     }
     return raw;
   };
-  sys.transcribe(text, { useSigles }).forEach((sent, si) => {
+  sys.transcribe(text, { useSigles, accents }).forEach((sent, si) => {
     if (si) items.push({ kind: 'sep', text: '×' });
     let pending = null;
     for (const raw of sent.map(withOverride)) {
@@ -140,7 +140,7 @@ export class InkSheet {
     const bottom = gloss ? it.glossY + 6 : it.lineDesc;
     g.append(el('rect', { class: 'hit', x: -m.left - 8, y: -m.asc - 8, width: m.w + 16, height: m.asc + bottom + 14, rx: 9 }));
     const glyphs = el('g', { transform: `scale(${U},${-U})` });
-    for (const gl of it.shape.glyphs) glyphs.append(el('path', { class: 'g', d: gl.d, transform: `translate(${gl.x},${gl.y})` }));
+    for (const gl of it.shape.glyphs) glyphs.append(el('path', { class: gl.mark ? 'g accent' : 'g', d: gl.d, transform: `translate(${gl.x},${gl.y})` }));
     g.append(glyphs);
     if (it.proper) g.append(el('line', { class: 'ul', x1: -m.left, x2: -m.left + m.inkW, y1: m.desc + 5, y2: m.desc + 5 }));
     if (gloss) g.append(el('text', { class: 'gloss', x: -m.left, y: it.glossY }, this.glossText(it)));
@@ -244,7 +244,7 @@ export function signSvg(sys, token, span = 1250) {
   const s = shape(sys.toDuployan([token]));
   const b = s.box;
   const cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2;
-  const paths = s.glyphs.map((g) => `<path d="${g.d}" transform="translate(${g.x},${g.y})"/>`).join('');
+  const paths = s.glyphs.map((g) => `<path${g.mark ? ' class="accent"' : ''} d="${g.d}" transform="translate(${g.x},${g.y})"/>`).join('');
   const svg = `<svg class="glyph" viewBox="${cx - span / 2} ${-cy - span / 2} ${span} ${span}" aria-hidden="true"><g transform="scale(1,-1)">${paths}</g></svg>`;
   signCache.set(ck, svg);
   return svg;

@@ -42,6 +42,15 @@ for (const [w, exp] of Object.entries(FULL)) {
   const got = wordToPhonemes(w, { shortcuts: false }).join(' ');
   if (got !== exp) { fail++; console.log(`✗ full ${w.padEnd(9)} got: ${got.padEnd(22)} want: ${exp}`); }
 }
+// house rule: open vowels told apart (the canvas and the cards turn this on)
+const FINE = { les: 'L é', lait: 'L è', et: 'é', est: 'è', mer: 'M è R', elle: 'è L', neige: 'N è J', 'été': 'é T é',
+  saule: 'S o L', sol: 'S ò L', rose: 'R o Z', porte: 'P ò R T', mot: 'M o', paume: 'P o M', pomme: 'P ò M', 'école': 'é K ò L',
+  deux: 'D eu', peur: 'P œ R', neuf: 'N œ F', jeune: 'J œ N', jeudi: 'J eu D i', heureuse: 'œ R eu Z', 'œuf': 'œ F', 'œufs': 'eu',
+  parlerai: 'P a R L R é', vrai: 'V R è' };
+for (const [w, exp] of Object.entries(FINE)) {
+  const got = wordToPhonemes(w, { fine: true }).join(' ');
+  if (got !== exp) { fail++; console.log(`✗ fine ${w.padEnd(9)} got: ${got.padEnd(22)} want: ${exp}`); }
+}
 const total = Object.keys(CASES).length;
 console.log(`\nwords: ${total - fail}/${total} pass`);
 

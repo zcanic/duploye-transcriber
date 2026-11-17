@@ -98,6 +98,7 @@ pre { background: var(--chip); padding: 12px 14px; border-radius: 10px; overflow
 
 /* steno glyphs inside cells: same ink as the canvas */
 .word .g { fill: var(--ink); }
+.word .g.accent, svg.glyph path.accent { fill: var(--accent); } /* house-rule accent on open vowels */
 .word .gloss { fill: var(--muted); font: 12px var(--f-mono); }
 .word .ul { stroke: var(--ink); stroke-width: 1.4; }
 .word .hit { fill: transparent; }

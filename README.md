@@ -19,6 +19,8 @@ French text ──► sounds (rule-based, editable) ──► Unicode Duployan �
 - **French → Duployé sounds** using the method's conventions: silent letters and mute *e* are dropped, [e]/[ɛ] → `é`, [ø]/[œ] → `eu`, *oi* → `a`, *ui* → `i`, *-ent* is silent after *ils/elles*, and so on.
 - **Tap a word to fix its sounds.** French spelling has exceptions no rule set covers. Remove a sound by tapping it, add one from the alphabet. The fix applies to every occurrence and is kept in your browser.
 - **Alphabet drawer** drawn to one scale, so short and long strokes (P / B, T / D…) keep their real proportions.
+- **Faithful to pronunciation by default.** The **Sigles** switch holds every shortcut that loses information — sigles and word signs, *oi* written as *a*, *ui* written as *i*, the English aspirate *h* left out — and is off by default, so *loi* (L ou a) and *la* (L a) stay apart.
+- **House rule: open vowels marked.** Duployé has one sign each for [e]/[ɛ], [o]/[ɔ] and [ø]/[œ]. With **Accents** (on by default on the canvas and always on the cards) the open vowel gets a small accent above the sign, in the accent colour: *les* / *lait*, *saule* / *sol*, *deux* / *peur*. It is not in the manuals; the base strokes are unchanged, so the writing still reads as standard Duployé.
 - **Sigles / word signs**: the first abbreviations taught in each method (French *pour, bien, faire, vous, nous, tout, grand, Monsieur, il*; English *the, to, and, do, of, all, be, but, by, have, very, in, go, good, put, people…*).
 - **Elision rule**: *l', j', qu'*… join the next word only when it is a monosyllable or starts with a circle vowel (a, o, ou). Otherwise they stand apart.
 - Sentences are separated by `×`, and proper nouns and numbers are underlined, as in the manuals.

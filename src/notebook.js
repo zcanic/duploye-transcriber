@@ -107,11 +107,12 @@ export function parse(md) {
 
 // ---------- cells ----------
 const cellOpts = (opts, meta) => {
-  const o = { lang: meta.lang === 'en' ? 'en' : 'fr', sounds: false, gloss: true, sigles: true };
+  const o = { lang: meta.lang === 'en' ? 'en' : 'fr', sounds: false, gloss: true, sigles: true, accents: false };
   for (const t of opts) {
     if (t === 'sounds') o.sounds = true;
     else if (t === 'nogloss') o.gloss = false;
     else if (t === 'nosigles') o.sigles = false;
+    else if (t === 'accents') o.accents = true;
     else if (/^lang=(fr|en)$/.test(t)) o.lang = t.slice(5);
   }
   return o;
@@ -171,7 +172,7 @@ function stenoCell(block, meta) {
   let shown = false, drawSeq = 0;
   const draw = async (opts = {}) => {
     const n = ++drawSeq;
-    const items = buildItems(input.value, sys, { useSigles: o.sigles });
+    const items = buildItems(input.value, sys, { useSigles: o.sigles, accents: o.accents });
     await prepare(items, sys); // shaped in the worker
     if (n !== drawSeq) return;
     sizeSvg(svg, sheet.set(items, sys, opts));
@@ -244,7 +245,7 @@ function drillCell(block, meta, mode) {
       const items = [{ kind: 'word', text: e.word, parts: [], tokens: parsePhonemes(e.fix, sys).tokens }];
       return keyItems(items);
     }
-    return buildItems(e.word, sys, { useSigles: o.sigles });
+    return buildItems(e.word, sys, { useSigles: o.sigles, accents: o.accents });
   };
   const reveals = [];
   entries.forEach((e, idx) => {

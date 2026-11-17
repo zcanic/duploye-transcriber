@@ -91,7 +91,8 @@ function say(text, force = false) {
 }
 
 // ---------- a card ----------
-const itemsOf = (card) => buildItems(card.fr.replace(/,/g, ' '), sys, { useSigles: false });
+// cards are for learning French: full forms, and open vowels marked (house rule)
+const itemsOf = (card) => buildItems(card.fr.replace(/,/g, ' '), sys, { useSigles: false, accents: true });
 // shape a few cards ahead in the worker, so the next card is ready when it rises
 const prepareCards = (cards) => Promise.all(cards.map((c) => prepare(itemsOf(c), sys)));
 const posClass = (pos) => (/n\.m/.test(pos) ? 'm' : /n\.f/.test(pos) ? 'f' : '');

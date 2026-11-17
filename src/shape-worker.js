@@ -18,7 +18,8 @@ self.onmessage = async (e) => {
         import('../vendor/harfbuzzjs/index.mjs'),
         fetch(msg.url).then((r) => r.arrayBuffer()),
       ]);
-      shapeText = makeShaper(hb, new hb.Font(new hb.Face(new hb.Blob(buf))));
+      const face = new hb.Face(new hb.Blob(buf));
+      shapeText = makeShaper(hb, new hb.Font(face));
     })();
     try { await ready; self.postMessage({ type: 'ready' }); }
     catch (err) { self.postMessage({ type: 'error', message: String(err) }); }

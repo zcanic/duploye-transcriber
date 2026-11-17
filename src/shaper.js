@@ -48,7 +48,8 @@ function ensureMainShaper() {
   mainShaperPromise ||= (async () => {
     const hb = await import('../vendor/harfbuzzjs/index.mjs');
     const buf = await (await fetch(fontUrl)).arrayBuffer();
-    mainShaper = makeShaper(hb, new hb.Font(new hb.Face(new hb.Blob(buf))));
+    const face = new hb.Face(new hb.Blob(buf));
+    mainShaper = makeShaper(hb, new hb.Font(face));
   })();
   return mainShaperPromise;
 }

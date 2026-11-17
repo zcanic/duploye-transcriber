@@ -19,8 +19,17 @@ function pathBox(d) {
 // Round long float coordinates: smaller DOM, same look at any zoom.
 const tidy = (d) => d.replace(/-?\d+\.\d+/g, (n) => (+n).toFixed(1));
 
-/** Returns shapeText(text) -> {glyphs, box} for a loaded HarfBuzz font. */
+const GAP = 110;  // font units between a vowel and the accent drawn above it
+
+/**
+ * Returns shapeText(text) -> {glyphs, box} for a loaded HarfBuzz font.
+ * The grave accent (U+0300, our mark for open vowels) is placed by the font inside the
+ * vowel, inside the circle of ò, where it could be read as the dot of ou. We lift it
+ * above its vowel, centred, and flag it so it can be drawn in the accent colour.
+ * Only that glyph moves: the dots of GN, Z, CH and TH are marks too and stay put.
+ */
 export function makeShaper(hb, font) {
+  const accentGid = typeof font.nominalGlyph === 'function' ? font.nominalGlyph(0x300) : null;
   const paths = new Map(); // glyph id -> outline (most glyphs are invisible joiners)
   const pathOf = (gid) => {
     let p = paths.get(gid);
@@ -34,17 +43,24 @@ export function makeShaper(hb, font) {
     hb.shape(font, buffer);
     const out = [];
     let px = 0, py = 0;
-    let X0 = 0, Y0 = 0, X1 = 0, Y1 = 0, first = true;
+    let X0 = 0, Y0 = 0, X1 = 0, Y1 = 0, first = true, base = null;
     for (const g of buffer.getGlyphInfosAndPositions()) {
       const d = pathOf(g.codepoint);
       if (d) {
-        const x = px + (g.xOffset || 0), y = py + (g.yOffset || 0);
+        let x = px + (g.xOffset || 0), y = py + (g.yOffset || 0);
         const b = pathBox(d);
+        const mark = accentGid != null && g.codepoint === accentGid;
+        if (b && mark && base) {
+          // centre over the vowel, a little above its top
+          x = (base.x0 + base.x1) / 2 - (b.x0 + b.x1) / 2;
+          y = base.y1 + GAP - b.y0;
+        }
         if (b) {
           const box = { x0: b.x0 + x, y0: b.y0 + y, x1: b.x1 + x, y1: b.y1 + y };
           if (first) { X0 = box.x0; Y0 = box.y0; X1 = box.x1; Y1 = box.y1; first = false; }
           else { X0 = Math.min(X0, box.x0); Y0 = Math.min(Y0, box.y0); X1 = Math.max(X1, box.x1); Y1 = Math.max(Y1, box.y1); }
-          out.push({ d, x, y, box: b, len: Math.hypot(b.x1 - b.x0, b.y1 - b.y0) });
+          out.push({ d, x, y, box: b, len: Math.hypot(b.x1 - b.x0, b.y1 - b.y0), ...(mark ? { mark: true } : {}) });
+          if (!mark) base = box;
         }
       }
       px += g.xAdvance || 0;

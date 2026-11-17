@@ -13,7 +13,10 @@
 // why the UI lets the learner edit the phonemes of every word.
 
 export const CONSONANTS = ['P', 'B', 'T', 'D', 'F', 'V', 'K', 'G', 'L', 'R', 'M', 'N', 'GN', 'S', 'Z', 'J', 'CH'];
-export const VOWELS = ['a', 'o', 'ou', 'é', 'i', 'u', 'eu', 'an', 'in', 'on', 'un'];
+export const VOWELS = ['a', 'o', 'ou', 'é', 'i', 'u', 'eu', 'an', 'in', 'on', 'un', 'è', 'ò', 'œ'];
+// House rule (not in the manual): open vowels è [ɛ], ò [ɔ], œ [œ] are told apart from
+// é [e], o [o], eu [ø] with an accent on the sign. Without ctx.fine they merge back.
+const MERGE = { 'è': 'é', 'ò': 'o', 'œ': 'eu' };
 export const TOKENS = [...CONSONANTS, ...VOWELS];
 
 const VOWEL_CHARS = 'aeiouyàâäéèêëîïôöùûüœæ';
@@ -22,27 +25,27 @@ const FRONT = 'eiyéèêëîï'; // letters that soften c / g
 
 // Whole-word exceptions (phonemes separated by spaces).
 const EXCEPTIONS = {
-  est: 'é', es: 'é', et: 'é', les: 'L é', des: 'D é', mes: 'M é', tes: 'T é', ses: 'S é', ces: 'S é',
+  est: 'è', es: 'è', et: 'é', les: 'L é', des: 'D é', mes: 'M é', tes: 'T é', ses: 'S é', ces: 'S é',
   eu: 'u', eus: 'u', eut: 'u', eux: 'eu', os: 'o', 'août': 'ou', aout: 'ou',
-  œufs: 'eu', oeufs: 'eu', œuf: 'eu F', oeuf: 'eu F', œil: 'eu i', oeil: 'eu i', yeux: 'i eu',
+  œufs: 'eu', oeufs: 'eu', œuf: 'œ F', oeuf: 'œ F', œil: 'œ i', oeil: 'œ i', yeux: 'i eu',
   femme: 'F a M', femmes: 'F a M', monsieur: 'M eu S i eu', messieurs: 'M é S i eu',
-  fils: 'F i S', six: 'S i S', dix: 'D i S', sept: 'S é T', huit: 'i T', vingt: 'V in', cinq: 'S in K',
-  mat: 'M a T', net: 'N é T', but: 'B u T', avec: 'a V é K', clef: 'K L é', pied: 'P i é', pieds: 'P i é',
+  fils: 'F i S', six: 'S i S', dix: 'D i S', sept: 'S è T', huit: 'i T', vingt: 'V in', cinq: 'S in K',
+  mat: 'M a T', net: 'N è T', but: 'B u T', avec: 'a V è K', clef: 'K L é', pied: 'P i é', pieds: 'P i é',
   ville: 'V i L', villes: 'V i L', village: 'V i L a J', mille: 'M i L', tranquille: 'T R an K i L',
-  oignon: 'o GN on', hier: 'i é R', pays: 'P é i', gens: 'J an', sens: 'S an S', tabac: 'T a B a',
-  second: 'S eu G on', seconde: 'S eu G on D', examen: 'é G Z a M in', album: 'a L B o M',
+  oignon: 'o GN on', hier: 'i è R', pays: 'P é i', gens: 'J an', sens: 'S an S', tabac: 'T a B a',
+  second: 'S eu G on', seconde: 'S eu G on D', examen: 'è G Z a M in', album: 'a L B ò M',
   monsieur_: '', // placeholder to keep the list sorted mentally
   // common verbs in -ent (3rd person plural) met without "ils"/"elles" before them
   peuvent: 'P eu V', veulent: 'V eu L', doivent: 'D a V', furent: 'F u R', eurent: 'u R', firent: 'F i R',
   savent: 'S a V', disent: 'D i Z', prennent: 'P R é N', viennent: 'V i é N', font: 'F on', sont: 'S on',
   client: 'K L i an', clients: 'K L i an', patient: 'P a S i an', science: 'S i an S',
-  orient: 'o R i an', ancien: 'an S i in', sœur: 'S eu R', soeur: 'S eu R', cœur: 'K eu R', coeur: 'K eu R',
+  orient: 'ò R i an', ancien: 'an S i in', sœur: 'S œ R', soeur: 'S œ R', cœur: 'K œ R', coeur: 'K œ R',
   plus: 'P L u', tous: 'T ou S', ours: 'ou R S', mars: 'M a R S', hélas: 'é L a S', bus: 'B u S',
-  autobus: 'o T o B u S', tennis: 'T é N i S', jadis: 'J a D i S', maïs: 'M a i S', vis: 'V i S',
-  cactus: 'K a K T u S', virus: 'V i R u S', bonus: 'B o N u S', iris: 'i R i S', oasis: 'o a Z i S',
-  gaz: 'G a Z', fier: 'F i é R', hiver: 'i V é R', amer: 'a M é R', enfer: 'an F é R', cancer: 'K an S é R',
-  super: 'S u P é R', revolver: 'R é V o L V é R', chaos: 'K a o', écho: 'é K o', orchestre: 'o R K é S T R',
-  chœur: 'K eu R', choeur: 'K eu R', chrétien: 'K R é T i in', technique: 'T é K N i K',
+  autobus: 'o T o B u S', tennis: 'T è N i S', jadis: 'J a D i S', maïs: 'M a i S', vis: 'V i S',
+  cactus: 'K a K T u S', virus: 'V i R u S', bonus: 'B ò N u S', iris: 'i R i S', oasis: 'ò a Z i S',
+  gaz: 'G a Z', fier: 'F i è R', hiver: 'i V è R', amer: 'a M è R', enfer: 'an F è R', cancer: 'K an S è R',
+  super: 'S u P è R', revolver: 'R é V ò L V è R', chaos: 'K a o', écho: 'é K o', orchestre: 'ò R K è S T R',
+  chœur: 'K œ R', choeur: 'K œ R', chrétien: 'K R é T i in', technique: 'T è K N i K',
 };
 delete EXCEPTIONS.monsieur_;
 
@@ -67,7 +70,8 @@ function stripEnding(w, ctx) {
   if (s.length >= 2 && s.endsWith('e')) return { stem: s.slice(0, -1), finalE: false }; // année, vie, rue, joue
   // pronounced-r -er words keep their r; other -er / -ez / -et / -ed sound "é"
   if (s.endsWith('er') && s.length > 3 && !KEEP_ER.has(s)) return { stem: s.slice(0, -2) + 'é', finalE: false };
-  if (/(ez|et|ed)$/.test(s) && s.length > 2) return { stem: s.slice(0, -2) + 'é', finalE: false };
+  if (/et$/.test(s) && s.length > 2) return { stem: s.slice(0, -2) + 'è', finalE: false }; // effet, ballet
+  if (/(ez|ed)$/.test(s) && s.length > 2) return { stem: s.slice(0, -2) + 'é', finalE: false };
   // silent final consonants (keep c r f l, "CaReFuL"); c after n is silent too (blanc, banc)
   s = s.replace(/[tdpgsxz]+$/, '');
   if (/nc$/.test(s)) s = s.slice(0, -1);
@@ -93,13 +97,34 @@ const CLUSTER_OK = new Set(['bl', 'br', 'cl', 'cr', 'dr', 'fl', 'fr', 'gl', 'gr'
 function eSound(w, i) {
   const a = w[i + 1], b = w[i + 2];
   if (a === undefined) return null; // final e (normally stripped already)
-  if (a === 'x') return 'é';
+  if (a === 'x') return 'è';
   if (isV(a)) return null;
-  if (b === undefined) return 'é'; // e + final consonant: mer, sel, avec
+  if (b === undefined) return 'è'; // e + final consonant: mer, sel, avec
   if (isV(b)) return null; // e + C + V: open syllable, mute (petit, venir)
-  if (a === b) return 'é'; // double consonant: elle, terre, effet
+  if (a === b) return 'è'; // double consonant: elle, terre, effet
   if (CLUSTER_OK.has(a + b)) return null; // e + CL cluster: mute (secret ~ sec-ret)
-  return 'é'; // e + two consonants: merci, reste
+  return 'è'; // e + two consonants: merci, reste
+}
+
+// o is closed [o] at the end of a word (mot, dos, trop) and before a [z] (rose, chose);
+// elsewhere open [ɔ] (porte, sol, école, homme).
+function oClosed(w, j, at) {
+  if (j >= w.length) return true;
+  const n = at(j);
+  return n === 'z' || (n === 's' && isV(at(j + 1)) && w[j + 1] !== 's');
+}
+
+// eu is closed [ø] at the end of a word (deux, peu), before [z] (heureuse), before -tr
+// (neutre) and in open syllables (jeudi); open [œ] before r (peur, heure) and in a
+// closed final syllable (neuf, seul, jeune).
+function euSound(w, j, at, circumflex) {
+  if (circumflex || j >= w.length) return 'eu';
+  const n = at(j);
+  if (n === 'r') return 'œ';
+  if (n === 's' && isV(at(j + 1))) return 'eu';
+  if (n === 't' && at(j + 1) === 'r') return 'eu';
+  if (!isV(n) && (j + 1 >= w.length || !isV(w[j + 1]))) return 'œ';
+  return 'eu';
 }
 
 // Exceptions spelled with the oi/ui shortcuts, and their full forms.
@@ -108,13 +133,14 @@ const FULL_FORMS = { huit: 'u i T', doivent: 'D ou a V' };
 export function wordToPhonemes(raw, ctx = {}) {
   const short = ctx.shortcuts !== false; // the manual's speed shortcuts (oi -> a, ui -> i)
   let w = raw.toLowerCase().normalize('NFC').replace(/’/g, "'");
-  if (!short && FULL_FORMS[w] !== undefined) return parse(FULL_FORMS[w]);
-  if (EXCEPTIONS[w] !== undefined) return parse(EXCEPTIONS[w]);
+  const finish = (toks) => (ctx.fine ? toks : toks.map((t) => MERGE[t] || t));
+  if (!short && FULL_FORMS[w] !== undefined) return finish(parse(FULL_FORMS[w]));
+  if (EXCEPTIONS[w] !== undefined) return finish(parse(EXCEPTIONS[w]));
   const orig = w;
   const { stem } = stripEnding(w, ctx);
   w = stem;
   // look-ahead into the stripped ending too: "ce" keeps a soft c, "pose" a voiced s
-  const at = (k) => (k < w.length ? w[k] : w.endsWith('é') ? undefined : orig[k]);
+  const at = (k) => (k < w.length ? w[k] : /[éè]$/.test(w) ? undefined : orig[k]);
   const out = [];
   const push = (...t) => out.push(...t);
   let i = 0;
@@ -125,9 +151,9 @@ export function wordToPhonemes(raw, ctx = {}) {
     // ---------- vowels ----------
     if (r.startsWith('eau')) { push('o'); i += 3; continue; }
     if (/^(aill|ail$)/.test(r)) { push('a', 'i'); i += r.startsWith('aill') ? 4 : 3; continue; }
-    if (/^(eill|eil$)/.test(r)) { push('é', 'i'); i += r.startsWith('eill') ? 4 : 3; continue; }
-    if (/^(euill|euil$)/.test(r)) { push('eu', 'i'); i += r.startsWith('euill') ? 5 : 4; continue; }
-    if (/^(ueill|ueil$)/.test(r)) { push('eu', 'i'); i += r.startsWith('ueill') ? 5 : 4; continue; }
+    if (/^(eill|eil$)/.test(r)) { push('è', 'i'); i += r.startsWith('eill') ? 4 : 3; continue; }
+    if (/^(euill|euil$)/.test(r)) { push('œ', 'i'); i += r.startsWith('euill') ? 5 : 4; continue; }
+    if (/^(ueill|ueil$)/.test(r)) { push('œ', 'i'); i += r.startsWith('ueill') ? 5 : 4; continue; }
     if (/^(ouill|ouil$)/.test(r)) { push('ou', 'i'); i += r.startsWith('ouill') ? 5 : 4; continue; }
     if (r.startsWith('ill') && i > 0 && !isV(prev)) { if (out[out.length - 1] !== 'i') push('i'); i += 3; continue; } // fille, billet
     if (/^(ain|aim|ein)/.test(r) && nasalOK(w, i, 3, at)) { push('in'); i += 3; continue; }
@@ -144,15 +170,19 @@ export function wordToPhonemes(raw, ctx = {}) {
     if (/^(oi|oî)/.test(r)) { if (short) push('a'); else push('ou', 'a'); i += 2; continue; } // oi: [wa]
     if (/^(ou|où|oû)/.test(r)) { push('ou'); i += 2; continue; }
     if (/^(au)/.test(r)) { push('o'); i += 2; continue; }
-    if (/^(ai|aî|ei)/.test(r)) { push('é'); i += 2; continue; }
-    if (/^(eu|eû|œu)/.test(r)) { push('eu'); i += r.startsWith('œu') ? 2 : 2; continue; }
-    if (c === 'œ') { push('eu'); i += 1; continue; }
+    if (/^(ai|aî|ei)/.test(r)) {
+      // [ɛ], except the verb endings j'ai and the future -rai, which are [e]
+      const verbAi = i + 2 >= w.length && r.startsWith('ai') && (orig === 'ai' || (orig.endsWith('rai') && orig !== 'vrai'));
+      push(verbAi ? 'é' : 'è'); i += 2; continue;
+    }
+    if (/^(eu|eû|œu)/.test(r)) { push(euSound(w, i + 2, at, r.startsWith('eû'))); i += 2; continue; }
+    if (c === 'œ') { push(euSound(w, i + 1, at, false)); i += 1; continue; }
     if (r.startsWith('ui') && !(prev === 'q' || prev === 'g')) { if (short) push('i'); else push('u', 'i'); i += 2; continue; } // ui: [ɥi]
-    if ('éèêë'.includes(c)) { push('é'); i += 1; continue; }
+    if ('éèêë'.includes(c)) { push(c === 'é' ? 'é' : 'è'); i += 1; continue; }
     if (c === 'e') { const s = eSound(w, i); if (s) push(s); i += 1; continue; }
     if ('aàâä'.includes(c)) { push('a'); i += 1; continue; }
     if ('iîïy'.includes(c)) { push('i'); i += 1; continue; }
-    if ('oôö'.includes(c)) { push('o'); i += 1; continue; }
+    if ('oôö'.includes(c)) { push(c === 'ô' || oClosed(w, i + 1, at) ? 'o' : 'ò'); i += 1; continue; }
     if ('uûùü'.includes(c)) { push('u'); i += 1; continue; }
     // ---------- consonants ----------
     if (r.startsWith('sch')) { push('CH'); i += 3; continue; }
@@ -186,5 +216,5 @@ export function wordToPhonemes(raw, ctx = {}) {
     }
     i += 1; // apostrophes, hyphens, digits, unknown
   }
-  return out;
+  return finish(out);
 }

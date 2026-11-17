@@ -24,6 +24,7 @@ button, textarea { font: inherit; color: inherit; }
 .word.fresh { transition: none; }
 .word.leaving { opacity: 0; transition: opacity .18s; }
 .word .g { fill: var(--ink); transition: fill .2s; }
+.word .g.accent, svg.glyph path.accent { fill: var(--accent); } /* house-rule accent on open vowels */
 .word .hit { fill: transparent; }
 .word .gloss { fill: var(--muted); font: 12px var(--f-mono); letter-spacing: .01em; transition: fill .2s; }
 .word .ul { stroke: var(--ink); stroke-width: 1.4; }
