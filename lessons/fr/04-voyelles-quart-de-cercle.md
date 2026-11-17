@@ -69,13 +69,13 @@ yeux aïeux saluer muet nuage tuer duel
 
 教材的实际写法是把 *ui* 直接写成 **i**，和第 2 课 *oi* 写成 a 是同一个思路：
 
-```steno sounds
+```steno sounds sigles
 lui suis nuit depuis fruit
 ```
 
 同样会丢信息：*lui* 和 *lit*、*nuit* 和 *nid* 会写成一样。完整写法是 **u + i**，照读音 [ɥi] 把两个元音连起来：
 
-```steno sounds nosigles
+```steno sounds
 lui suis nuit depuis fruit
 ```
 

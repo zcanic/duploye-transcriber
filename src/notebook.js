@@ -7,8 +7,10 @@
 //   Ordinary **Markdown**: headings, paragraphs, lists, tables, > notes, `code`, [links](…).
 //
 //   ```steno            a live, editable cell; add "sounds" to list each word's sounds,
-//   pour vous faire     "nogloss" to hide the words under the shorthand, "nosigles" to spell out
-//   ```                 abbreviations, "lang=en" to switch system for this cell only
+//   pour vous faire     "nogloss" to hide the words under the shorthand, "sigles" to use the
+//   ```                 manual's shortcuts (sigles, oi -> a, ui -> i; off by default, as on the
+//                       canvas), "noaccents" to drop the open-vowel accents (on by default),
+//                       "lang=en" to switch system for this cell only
 //
 //   ```signs            a table of single signs at true scale (tokens separated by spaces;
 //   P B T D             one row per line)
@@ -107,12 +109,14 @@ export function parse(md) {
 
 // ---------- cells ----------
 const cellOpts = (opts, meta) => {
-  const o = { lang: meta.lang === 'en' ? 'en' : 'fr', sounds: false, gloss: true, sigles: true, accents: false };
+  const o = { lang: meta.lang === 'en' ? 'en' : 'fr', sounds: false, gloss: true, sigles: false, accents: true };
   for (const t of opts) {
     if (t === 'sounds') o.sounds = true;
     else if (t === 'nogloss') o.gloss = false;
+    else if (t === 'sigles') o.sigles = true;
     else if (t === 'nosigles') o.sigles = false;
     else if (t === 'accents') o.accents = true;
+    else if (t === 'noaccents') o.accents = false;
     else if (/^lang=(fr|en)$/.test(t)) o.lang = t.slice(5);
   }
   return o;

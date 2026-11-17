@@ -75,7 +75,7 @@ Add shorthand to any page with one script and one tag. See [`embed.html`](https:
 <duploye-text lang="fr" gloss>Un pour tous, tous pour un.</duploye-text>
 ```
 
-Attributes: `lang` (`fr` or `en`), `gloss`, `nosigles`, `size` (px per em), `width` (wrap width), `static` (no animation). The ink takes the element's CSS `color`; `el.replay()` writes it again.
+Attributes: `lang` (`fr` or `en`), `gloss`, `sigles` (speed shortcuts, off by default), `noaccents` (drop the open-vowel accents, on by default), `size` (px per em), `width` (wrap width), `static` (no animation). The ink takes the element's CSS `color`; `el.replay()` writes it again.
 
 ## Limitations
 

@@ -85,11 +85,11 @@ o ò
 eu œ
 ```
 
-```steno sounds accents
+```steno sounds
 les lait saule sol deux peur
 ```
 
-画布上的 **Accents** 开关默认打开，单词卡片也一直使用这条规则。课程里的格子按教材写，不加重音，只在讲这条规则的地方例外。
+画布上的 **Accents** 开关默认打开，单词卡片、嵌入组件和后面所有课程格子也都使用这条规则。
 
 ## 第一批缩写（sigles）
 
@@ -107,7 +107,7 @@ les lait saule sol deux peur
 | Monsieur | M |
 | il | i |
 
-```steno sounds
+```steno sounds sigles
 Un pour tous, tous pour un.
 ```
 
@@ -119,7 +119,7 @@ Un pour tous, tous pour un.
 
 先在纸上写出每个词或句子，再点 **Check**。
 
-```write
+```write sigles
 que
 de
 on
@@ -131,7 +131,7 @@ faire
 nous
 ```
 
-```write
+```write sigles
 On a.
 Il a eu un an.
 Tout est pour vous et pour eux.
@@ -142,7 +142,7 @@ Que faire pour bien faire ?
 
 先看速记猜是哪个词，再点 **Show word** 核对。
 
-```read
+```read sigles
 le
 je
 au

@@ -63,13 +63,13 @@ chaos boa zoo noua rouage
 
 *oi* 读 [wa]。教材的做法是不把它当双元音，**直接写成 a**，少写一个圈：
 
-```steno sounds
+```steno sounds sigles
 oiseau fois toit loi voir toile soir
 ```
 
 代价是信息丢失：*loi* 和 *la*、*moi* 和 *ma*、*voir* 和 *var* 会写成同一个样子，只能靠上下文分辨。如果你更在意准确，就按读音写成 **ou + a**，把两个元音顺着连起来（按上面讲的双元音规则）：
 
-```steno sounds nosigles
+```steno sounds
 oiseau fois toit loi voir toile soir
 ```
 

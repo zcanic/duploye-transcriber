@@ -7,8 +7,8 @@
 // Attributes
 //   lang      "fr" (Duployé, default) or "en" (Sloan-Duployan)
 //   gloss     show the words under the shorthand
-//   nosigles  spell out abbreviations instead of using sigles / word signs
-//   accents   mark open vowels è [ɛ], ò [ɔ], œ [œ] with an accent (French; a house rule)
+//   sigles    use the manual's shortcuts: sigles / word signs, oi -> a, ui -> i (off by default)
+//   noaccents don't mark open vowels è [ɛ], ò [ɔ], œ [œ] with an accent (French; marked by default)
 //   size      pen size in px per em (default 40)
 //   width     wrap width in px (default: the width the element is given, else 640)
 //   static    draw at once, without the writing animation
@@ -35,7 +35,7 @@ svg { display: block; overflow: visible; max-width: 100%; height: auto; }
 `;
 
 class DuployeText extends HTMLElement {
-  static observedAttributes = ['lang', 'gloss', 'nosigles', 'accents', 'size', 'width'];
+  static observedAttributes = ['lang', 'gloss', 'sigles', 'noaccents', 'size', 'width'];
 
   constructor() {
     super();
@@ -75,7 +75,7 @@ class DuployeText extends HTMLElement {
       this.sheet = new InkSheet(this.g, { unit: size / 1000, width, gloss: () => this.hasAttribute('gloss'), maxInkMs: 4000 });
     }
     await sys.load(text);
-    const items = buildItems(text, sys, { useSigles: !this.hasAttribute('nosigles'), accents: this.hasAttribute('accents') });
+    const items = buildItems(text, sys, { useSigles: this.hasAttribute('sigles'), accents: !this.hasAttribute('noaccents') });
     const n = (this.renderSeq = (this.renderSeq || 0) + 1);
     await prepare(items, sys); // shaped in a worker, off the main thread
     if (n !== this.renderSeq) return;
