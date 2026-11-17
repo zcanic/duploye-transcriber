@@ -2,6 +2,7 @@
 import * as fr from './duploye.js';
 import { TOKENS as FR_TOKENS } from './g2p.js';
 import * as en from './english.js';
+import { loadWords } from './lexicon.js';
 
 export const SYSTEMS = {
   fr: {
@@ -20,6 +21,8 @@ export const SYSTEMS = {
     hints: { a: 'a', o: 'o au eau', ou: 'ou', 'é': 'é è ai', i: 'i y', u: 'u', eu: 'eu œ', an: 'an en', in: 'in ain', on: 'on', un: 'un', 'è': 'open [ɛ]: mer, lait', 'ò': 'open [ɔ]: sol, porte', 'œ': 'open [œ]: peur, neuf',
       K: 'c qu', S: 's ç', Z: 'z', J: 'j ge', CH: 'ch', GN: 'gn', R: 'r', L: 'l' },
     ready: async () => {},
+    // pronunciations of these words from Lexique (lazy, a few small files); await before transcribe
+    load: (text) => loadWords(text),
     transcribe: fr.transcribe,
     toDuployan: fr.toDuployan,
   },
@@ -32,6 +35,7 @@ export const SYSTEMS = {
     groups: en.GROUPS,
     hints: en.HINTS,
     ready: () => en.loadDictionary(new URL('../data/cmudict-en.txt', import.meta.url).href),
+    load: async () => {},
     transcribe: en.transcribe,
     toDuployan: en.toDuployan,
   },

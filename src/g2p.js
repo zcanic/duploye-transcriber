@@ -1,4 +1,5 @@
-// French orthography -> Duployé phoneme tokens (rule-based, no dictionary).
+// French orthography -> Duployé phoneme tokens: Lexique's pronunciation when the
+// word is loaded (src/lexicon.js), spelling rules otherwise.
 //
 // Duployé writes sounds, not spelling, and uses a reduced inventory:
 //   consonants  P B T D F V K G L R M N GN S Z J CH
@@ -11,6 +12,8 @@
 //
 // The output is a best guess. French spelling has many exceptions, which is
 // why the UI lets the learner edit the phonemes of every word.
+
+import { lookup, phonToTokens } from './lexicon.js';
 
 export const CONSONANTS = ['P', 'B', 'T', 'D', 'F', 'V', 'K', 'G', 'L', 'R', 'M', 'N', 'GN', 'S', 'Z', 'J', 'CH'];
 export const VOWELS = ['a', 'o', 'ou', 'é', 'i', 'u', 'eu', 'an', 'in', 'on', 'un', 'è', 'ò', 'œ'];
@@ -25,7 +28,7 @@ const FRONT = 'eiyéèêëîï'; // letters that soften c / g
 
 // Whole-word exceptions (phonemes separated by spaces).
 const EXCEPTIONS = {
-  est: 'è', es: 'è', et: 'é', les: 'L é', des: 'D é', mes: 'M é', tes: 'T é', ses: 'S é', ces: 'S é',
+  ai: 'é', zoo: 'Z o', est: 'è', es: 'è', et: 'é', les: 'L é', des: 'D é', mes: 'M é', tes: 'T é', ses: 'S é', ces: 'S é',
   eu: 'u', eus: 'u', eut: 'u', eux: 'eu', os: 'o', 'août': 'ou', aout: 'ou',
   œufs: 'eu', oeufs: 'eu', œuf: 'œ F', oeuf: 'œ F', œil: 'œ i', oeil: 'œ i', yeux: 'i eu',
   femme: 'F a M', femmes: 'F a M', monsieur: 'M eu S i eu', messieurs: 'M é S i eu',
@@ -127,6 +130,26 @@ function euSound(w, j, at, circumflex) {
   return 'eu';
 }
 
+// Lexique writes o and eu in unstressed syllables as closed ([adoʀe], [pløʀe]), where
+// dictionaries such as the Robert give [adɔʀe], [plœʀe], and it has a few slips in eu
+// (peur [pøʀ]). When the word has as many o (or eu) vowels both ways, the spelling
+// rules decide their quality: for eu everywhere (the rule is regular), for o except in
+// the last syllable, where Lexique knows better (rhinocéros, rose, sol).
+const FAMILIES = [[new Set(['o', 'ò']), true], [new Set(['eu', 'œ']), false]];
+function harmonize(lex, rules) {
+  const out = lex.slice();
+  let last = -1;
+  out.forEach((t, k) => { if (VOWELS.includes(t)) last = k; });
+  for (const [fam, keepLast] of FAMILIES) {
+    const a = [], b = [];
+    out.forEach((t, k) => fam.has(t) && a.push(k));
+    rules.forEach((t) => fam.has(t) && b.push(t));
+    if (a.length !== b.length) continue;
+    a.forEach((k, n) => { if (!keepLast || k !== last) out[k] = b[n]; });
+  }
+  return out;
+}
+
 // Exceptions spelled with the oi/ui shortcuts, and their full forms.
 const FULL_FORMS = { huit: 'u i T', doivent: 'D ou a V' };
 
@@ -136,6 +159,13 @@ export function wordToPhonemes(raw, ctx = {}) {
   const finish = (toks) => (ctx.fine ? toks : toks.map((t) => MERGE[t] || t));
   if (!short && FULL_FORMS[w] !== undefined) return finish(parse(FULL_FORMS[w]));
   if (EXCEPTIONS[w] !== undefined) return finish(parse(EXCEPTIONS[w]));
+  const lex = ctx.lexicon !== false && lookup(w);
+  if (lex) {
+    const toks = phonToTokens(ctx.afterSubjectPronoun && lex.plural ? lex.plural : lex.phon, { oi: short && /o[iîy]/.test(w), ui: short && /ui/.test(w) });
+    // Lexique sometimes writes the schwa as [ø] (ce [sø], dehors, premier): never written
+    if (!/eu|eû|œ/.test(w)) for (let k = toks.length - 1; k >= 0; k--) if (toks[k] === 'eu') toks.splice(k, 1);
+    return finish(harmonize(toks, wordToPhonemes(raw, { ...ctx, lexicon: false, fine: true })));
+  }
   const orig = w;
   const { stem } = stripEnding(w, ctx);
   w = stem;
@@ -182,6 +212,7 @@ export function wordToPhonemes(raw, ctx = {}) {
     if (c === 'e') { const s = eSound(w, i); if (s) push(s); i += 1; continue; }
     if ('aàâä'.includes(c)) { push('a'); i += 1; continue; }
     if ('iîïy'.includes(c)) { push('i'); i += 1; continue; }
+    if (r === 'oo') { push('o'); i += 2; continue; } // zoo: one closed [o]
     if ('oôö'.includes(c)) { push(c === 'ô' || oClosed(w, i + 1, at) ? 'o' : 'ò'); i += 1; continue; }
     if ('uûùü'.includes(c)) { push('u'); i += 1; continue; }
     // ---------- consonants ----------

@@ -29,7 +29,15 @@ const SUBJECT_PRONOUNS = new Set(['ils', 'elles', "qu'ils", "qu'elles"]);
 const CIRCLE_VOWELS = new Set(['a', 'o', 'ou', 'ò']);
 const VOWEL_SET = new Set(['a', 'o', 'ou', 'é', 'i', 'u', 'eu', 'an', 'in', 'on', 'un', 'è', 'ò', 'œ']);
 
-export const toDuployan = (tokens) => tokens.map((t) => String.fromCodePoint(...[].concat(CODEPOINTS[t]))).join('');
+// Noto Sans Duployan cannot join a small semicircle vowel (i, é, Sloan ĕ / ē) straight
+// into an i: it breaks the outline and inserts a dotted circle. Lift the pen there.
+// The font cannot join some vowel pairs and inserts a dotted circle: a small-semicircle
+// vowel (é, è, i…) before i anywhere, and i before é/è (or Sloan ĕ/ē) unless a consonant comes first (hier, cuillère, yeti).
+// A zero-width non-joiner between them keeps each vowel whole.
+export const separateVowels = (s) => s
+  .replace(/([\u{1BC46}\u{1BC47}\u{1BC4C}\u{1BC4E}]\u0300?)(?=\u{1BC46})/gu, '$1\u200C')
+  .replace(/(^|[^\u{1BC00}-\u{1BC40}])(\u{1BC46})(?=[\u{1BC47}\u{1BC4C}\u{1BC4E}])/gu, '$1$2\u200C');
+export const toDuployan = (tokens) => separateVowels(tokens.map((t) => String.fromCodePoint(...[].concat(CODEPOINTS[t]))).join(''));
 
 export function parsePhonemes(text) {
   const toks = text.trim().split(/\s+/).filter(Boolean);

@@ -51,6 +51,8 @@ let updateSeq = 0;
 async function update({ inkAll = false } = {}) {
   const n = ++updateSeq;
   const system = sys();
+  await system.load(state.text);
+  if (n !== updateSeq) return;
   const items = buildItems(state.text, system, { useSigles: state.sigles, accents: state.accents, overrides: langOverrides() });
   await prepare(items, system);
   if (n !== updateSeq) return;

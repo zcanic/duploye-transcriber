@@ -94,7 +94,7 @@ function say(text, force = false) {
 // cards are for learning French: full forms, and open vowels marked (house rule)
 const itemsOf = (card) => buildItems(card.fr.replace(/,/g, ' '), sys, { useSigles: false, accents: true });
 // shape a few cards ahead in the worker, so the next card is ready when it rises
-const prepareCards = (cards) => Promise.all(cards.map((c) => prepare(itemsOf(c), sys)));
+const prepareCards = (cards) => Promise.all(cards.map(async (c) => { await sys.load(c.fr); return prepare(itemsOf(c), sys); }));
 const posClass = (pos) => (/n\.m/.test(pos) ? 'm' : /n\.f/.test(pos) ? 'f' : '');
 const sayBtn = '<button type="button" class="icon-btn say" data-say aria-label="Read aloud"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8h3l4-3v10l-4-3H4z"/><path class="wave" d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9"/></svg></button>';
 

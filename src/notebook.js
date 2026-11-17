@@ -172,6 +172,8 @@ function stenoCell(block, meta) {
   let shown = false, drawSeq = 0;
   const draw = async (opts = {}) => {
     const n = ++drawSeq;
+    await sys.load(input.value);
+    if (n !== drawSeq) return;
     const items = buildItems(input.value, sys, { useSigles: o.sigles, accents: o.accents });
     await prepare(items, sys); // shaped in the worker
     if (n !== drawSeq) return;

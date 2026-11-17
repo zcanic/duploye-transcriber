@@ -74,6 +74,7 @@ class DuployeText extends HTMLElement {
       this.g.replaceChildren();
       this.sheet = new InkSheet(this.g, { unit: size / 1000, width, gloss: () => this.hasAttribute('gloss'), maxInkMs: 4000 });
     }
+    await sys.load(text);
     const items = buildItems(text, sys, { useSigles: !this.hasAttribute('nosigles'), accents: this.hasAttribute('accents') });
     const n = (this.renderSeq = (this.renderSeq || 0) + 1);
     await prepare(items, sys); // shaped in a worker, off the main thread

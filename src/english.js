@@ -185,7 +185,8 @@ export function wordToTokens(word, opts = {}) {
   return { tokens: phonesToTokens(phones, key, opts), guessed: false };
 }
 
-export const toDuployan = (tokens) => tokens.map((t) => String.fromCodePoint(...(CODEPOINTS[t] || []))).join('');
+import { separateVowels } from './duploye.js';
+export const toDuployan = (tokens) => separateVowels(tokens.map((t) => String.fromCodePoint(...(CODEPOINTS[t] || []))).join(''));
 
 export function transcribe(text, { useSigles = true } = {}) {
   const sentences = [];
