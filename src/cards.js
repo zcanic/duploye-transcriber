@@ -105,7 +105,7 @@ function makeCard(card) {
   el.setAttribute('aria-roledescription', 'flashcard');
   const frontText = state.mode === 'zh' ? `<div class="prompt-zh">${esc(card.zh)}</div>` : `<div class="prompt-fr">${esc(card.fr)}</div>`;
   const backMain = state.mode === 'zh' ? `<div class="answer-fr">${esc(card.fr)}</div>` : `<div class="answer-zh">${esc(card.zh)}</div>`;
-  el.innerHTML = `<div class="stamp again">再练</div><div class="stamp good">记住</div>
+  el.innerHTML = `<div class="wash again" aria-hidden="true"></div><div class="wash good" aria-hidden="true"></div>
     <div class="flipper">
       <div class="face front"><span class="tag">${esc(pretty(card.topic))}</span>${state.mode === 'fr' ? sayBtn : ''}<div class="ink-slot"></div>${frontText}<div class="hint">点击翻面</div></div>
       <div class="face back"><span class="tag">${esc(pretty(card.topic))}</span>${sayBtn}${backMain}
@@ -212,7 +212,8 @@ function answer(known, fromSwipe = false) {
   const dy = fromSwipe ? (parseFloat(el.dataset.dy) || 0) : 0;
   el.style.transform = `translate3d(${dir * (innerWidth * 0.6 + 260)}px, ${dy + 40}px, 0) rotate(${dir * 22}deg)`;
   el.style.opacity = '0';
-  el.querySelector(known ? '.stamp.good' : '.stamp.again').style.opacity = '1';
+  el.style.setProperty('--pull', dir);
+  setPull(0);
   setTimeout(() => el.remove(), 460);
   c.sheet.stop();
   session.i++;
@@ -274,6 +275,14 @@ function setMode(mode) {
 }
 
 // ---------- gestures ----------
+// light the button the swipe is heading for (and ease back when it settles)
+const controls = $('controls');
+function setPull(p, settle = true) {
+  controls.classList.toggle('settle', settle);
+  $('goodBtn').style.setProperty('--lit', Math.max(0, p));
+  $('againBtn').style.setProperty('--lit', Math.max(0, -p));
+}
+
 let drag = null;
 stage.addEventListener('pointerdown', (e) => {
   const el = e.target.closest('.card');
@@ -292,8 +301,9 @@ stage.addEventListener('pointermove', (e) => {
   const el = current.el;
   el.dataset.dy = dy * 0.3;
   el.style.transform = `translate3d(${dx}px, ${dy * 0.3}px, 0) rotate(${dx * 0.055}deg)`;
-  el.querySelector('.stamp.good').style.opacity = clamp(dx / 110, 0, 1);
-  el.querySelector('.stamp.again').style.opacity = clamp(-dx / 110, 0, 1);
+  const p = clamp(dx / 110, -1, 1);
+  el.style.setProperty('--pull', p);
+  setPull(p, false);
 });
 const endDrag = (e) => {
   if (!drag || e.pointerId !== drag.id) return;
@@ -308,8 +318,8 @@ const endDrag = (e) => {
   el.classList.remove('dragging');
   el.classList.add('spring');
   el.style.transform = '';
-  el.querySelector('.stamp.good').style.opacity = 0;
-  el.querySelector('.stamp.again').style.opacity = 0;
+  el.style.setProperty('--pull', 0);
+  setPull(0);
   setTimeout(() => el.classList.remove('spring'), 560);
 };
 stage.addEventListener('pointerup', endDrag);

@@ -104,10 +104,12 @@ button { font: inherit; color: inherit; }
 .sounds { font: 13px var(--f-mono); color: var(--accent); letter-spacing: .02em; }
 .mini-steno { height: 44px; width: auto; max-width: 70%; }
 
-/* swipe feedback stamps */
-.stamp { position: absolute; top: 22px; padding: 4px 12px; border: 2px solid currentColor; border-radius: 10px; font-weight: 600; font-size: 15px; opacity: 0; pointer-events: none; z-index: 2; }
-.stamp.good { right: 22px; color: var(--good); transform: rotate(8deg); }
-.stamp.again { left: 22px; color: var(--again); transform: rotate(-8deg); }
+/* swipe feedback: a pale wash rising from the edge the card moves toward (--pull: -1 … 1),
+   and the matching button below lights up, so the words come from the button, not the card */
+.wash { position: absolute; inset: 0; border-radius: 22px; pointer-events: none; z-index: 2; opacity: 0; }
+.wash.good { background: linear-gradient(270deg, color-mix(in oklab, var(--good) 22%, transparent), transparent 70%); opacity: clamp(0, var(--pull, 0), 1); }
+.wash.again { background: linear-gradient(90deg, color-mix(in oklab, var(--again) 22%, transparent), transparent 70%); opacity: clamp(0, calc(-1 * var(--pull, 0)), 1); }
+.card.spring .wash, .card.leaving .wash { transition: opacity .3s; }
 
 /* controls */
 .controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: var(--card-w); }
@@ -121,6 +123,11 @@ button { font: inherit; color: inherit; }
 .ctl.good { color: var(--good); }
 .ctl.again span, .ctl.good span, .ctl.flip span { color: var(--ink); }
 .ctl:disabled { opacity: .4; cursor: default; }
+.ctl.again, .ctl.good { --lit: 0; background: color-mix(in oklab, currentColor calc(var(--lit) * 12%), var(--paper));
+  border-color: color-mix(in oklab, currentColor calc(var(--lit) * 45%), var(--line)); transform: scale(calc(1 + var(--lit) * .04)); }
+.ctl.again:hover, .ctl.good:hover { background: color-mix(in oklab, currentColor calc(var(--lit) * 12%), var(--chip)); }
+.ctl.again:active, .ctl.good:active { transform: scale(.96); }
+.controls.settle .ctl { transition: transform .3s var(--ease), background .3s, border-color .3s; }
 @media (pointer: coarse) { .ctl kbd { display: none; } }
 
 /* summary card */
