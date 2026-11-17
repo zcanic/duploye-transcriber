@@ -65,13 +65,21 @@ peuvent durée chute aucune occupé
 yeux aïeux saluer muet nuage tuer duel
 ```
 
-## ui 写成 i
+## ui 写成 i（速度简写）
 
-实际书写中，*ui* 直接写成 **i**，和上一课的 *oi* 写成 a 是同样的思路：
+教材的实际写法是把 *ui* 直接写成 **i**，和第 2 课 *oi* 写成 a 是同一个思路：
 
 ```steno sounds
 lui suis nuit depuis fruit
 ```
+
+同样会丢信息：*lui* 和 *lit*、*nuit* 和 *nid* 会写成一样。完整写法是 **u + i**，照读音 [ɥi] 把两个元音连起来：
+
+```steno sounds nosigles
+lui suis nuit depuis fruit
+```
+
+画布默认用完整写法，打开 **Sigles** 开关才用简写。
 
 ## 练习：写
 

@@ -36,6 +36,12 @@ for (const [w, exp] of Object.entries(CASES)) {
   const got = wordToPhonemes(w).join(' ');
   if (got !== exp) { fail++; console.log(`✗ ${w.padEnd(14)} got: ${got.padEnd(22)} want: ${exp}`); }
 }
+// without the speed shortcuts (the canvas default): oi and ui keep both vowels
+const FULL = { loi: 'L ou a', voir: 'V ou a R', moi: 'M ou a', lui: 'L u i', nuit: 'N u i', huit: 'u i T', voyage: 'V ou a i a J', qui: 'K i', point: 'P ou in' };
+for (const [w, exp] of Object.entries(FULL)) {
+  const got = wordToPhonemes(w, { shortcuts: false }).join(' ');
+  if (got !== exp) { fail++; console.log(`✗ full ${w.padEnd(9)} got: ${got.padEnd(22)} want: ${exp}`); }
+}
 const total = Object.keys(CASES).length;
 console.log(`\nwords: ${total - fail}/${total} pass`);
 

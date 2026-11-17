@@ -82,6 +82,6 @@ function pushWord(items, word, prevWord, idx, useSigles) {
     items.push({ text: word, tokens: SIGLES[lower], sigle: true });
     return;
   }
-  const tokens = wordToPhonemes(word, { afterSubjectPronoun: SUBJECT_PRONOUNS.has(prevWord) });
+  const tokens = wordToPhonemes(word, { afterSubjectPronoun: SUBJECT_PRONOUNS.has(prevWord), shortcuts: useSigles });
   items.push({ text: word, tokens, properNoun: isCap });
 }

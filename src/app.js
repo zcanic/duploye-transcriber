@@ -24,7 +24,8 @@ const state = {
   text: store.get(textKey(LANG0), LANG0 === 'fr' ? store.get('duploye.v2.text', SYSTEMS.fr.sample) : SYSTEMS.en.sample),
   overrides: Object.fromEntries(Object.entries(store.get('duploye.overrides', {})).map(([k, v]) => [k.includes(':') ? k : `fr:${k}`, v])),
   gloss: store.get('duploye.gloss', true),
-  sigles: store.get('duploye.sigles', true),
+  // shortcuts that trade information for speed (sigles / word signs, oi -> a, ui -> i, silent h): off by default
+  sigles: store.get('duploye.shortcuts', false) === true,
   sel: null,                    // { text: lowercased, n: occurrence }
 };
 const view = { x: 0, y: 0, k: 1 };
@@ -324,7 +325,7 @@ $('zoomIn').addEventListener('click', () => { const v = { ...view }; const k = c
 $('zoomOut').addEventListener('click', () => { const v = { ...view }; const k = clamp(v.k / 1.25, 0.2, 5), cx = innerWidth / 2, cy = innerHeight / 2; animateView({ k, x: cx - (cx - v.x) * k / v.k, y: cy - (cy - v.y) * k / v.k }, 260); });
 $('zoomPct').addEventListener('click', () => fit());
 $('gloss').addEventListener('click', () => { state.gloss = !state.gloss; store.set('duploye.gloss', state.gloss); setToggle('gloss', state.gloss); update(); });
-$('sigles').addEventListener('click', () => { state.sigles = !state.sigles; store.set('duploye.sigles', state.sigles); setToggle('sigles', state.sigles); update(); });
+$('sigles').addEventListener('click', () => { state.sigles = !state.sigles; store.set('duploye.shortcuts', state.sigles); setToggle('sigles', state.sigles); update(); });
 $('alpha').addEventListener('click', () => {
   const d = $('drawer');
   d.hidden = !d.hidden;
@@ -382,7 +383,7 @@ function syncLangUI() {
   for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === state.lang));
   src.placeholder = sys().placeholder;
   document.documentElement.lang = state.lang;
-  $('sigles').title = state.lang === 'en' ? 'Use word signs' : 'Use abbreviations (sigles)';
+  $('sigles').title = state.lang === 'en' ? 'Shortcuts: word signs, the aspirate h left out' : 'Shortcuts: sigles, oi written as a, ui written as i';
 }
 async function loadSystem() {
   const lang = state.lang;

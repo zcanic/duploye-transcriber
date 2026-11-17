@@ -15,7 +15,7 @@ export const CODEPOINTS = {
   F: [0x1bc04], V: [0x1bc09], L: [0x1bc06], R: [0x1bc0b], J: [0x1bc15], // J: Sloan J, extended k-slant
   TH: [0x1bc11], DH: [0x1bc12], M: [0x1bc19], N: [0x1bc1a], NG: [0x1bc28],
   S: [0x1bc1c], Z: [0x1bc25], SH: [0x1bc1b], ZH: [0x1bc23], CH: [0x1bc29],
-  W: [0x1bc38], WH: [0x1bc39], Y: [0x1bc46],
+  W: [0x1bc38], WH: [0x1bc39], Y: [0x1bc46], H: [0x1bc00], // H: the aspirate dot
   'ă': [0x1bc41], 'ŏ': [0x1bc44], 'ŭ': [0x1bc57], oo: [0x1bc59], 'ū': [0x1bc58],
   'ĭ': [0x1bc46], 'ĕ': [0x1bc4c], 'ā': [0x1bc47], 'ē': [0x1bc4e],
   ow: [0x1bc42], 'ī': [0x1bc41, 0x1bc46], oi: [0x1bc44, 0x1bc46],
@@ -25,14 +25,14 @@ export const TOKENS = Object.keys(CODEPOINTS);
 
 export const GROUPS = [
   ['Lines', ['P', 'B', 'T', 'D', 'TH', 'DH', 'F', 'V', 'K', 'G', 'J', 'L', 'R']],
-  ['Curves', ['M', 'N', 'NG', 'S', 'Z', 'SH', 'ZH', 'CH', 'W', 'WH', 'Y']],
+  ['Curves', ['M', 'N', 'NG', 'S', 'Z', 'SH', 'ZH', 'CH', 'W', 'WH', 'Y', 'H']],
   ['Vowels', ['ă', 'ŏ', 'ŭ', 'oo', 'ū', 'ĭ', 'ĕ', 'ā', 'ē', 'ow', 'ī', 'oi']],
   ['Nasals', ['ăn', 'ĕn', 'ĭn', 'ŏn', 'ŭn']],
 ];
 export const HINTS = {
   'ă': 'fat, far', 'ŏ': 'not, fall, note', 'ŭ': 'nut', oo: 'bull, move', 'ū': 'tube', 'ĭ': 'it', 'ĕ': 'met', 'ā': 'fate',
   'ē': 'me', ow: 'owl', 'ī': 'iron', oi: 'oil', TH: 'pith', DH: 'lathe', SH: 'she', ZH: 'vision', CH: 'church',
-  J: 'judge', NG: 'sing', WH: 'when', 'ăn': 'fan', 'ĕn': 'enter', 'ĭn': 'print', 'ŏn': 'gone', 'ŭn': 'fun',
+  J: 'judge', NG: 'sing', WH: 'when', H: 'h (a dot)', 'ăn': 'fan', 'ĕn': 'enter', 'ĭn': 'print', 'ŏn': 'gone', 'ŭn': 'fun',
 };
 
 // Word signs from Unit 9 of the Instructor.
@@ -91,7 +91,7 @@ function spellingVowels(word) {
   return groups.map((g) => SPELL_VOWEL[g[0]] || 'ă');
 }
 
-export function phonesToTokens(phones, word = '') {
+export function phonesToTokens(phones, word = '', { shortcuts = true } = {}) {
   const spelled = spellingVowels(word);
   const vowelCount = phones.filter((p) => VOWEL_PHONES.has(p)).length;
   const aligned = spelled.length === vowelCount;
@@ -122,7 +122,9 @@ export function phonesToTokens(phones, word = '') {
       }
       return;
     }
-    if (p === 'HH') return; // the aspirate is usually omitted
+    // the aspirate: a dot before the vowel; Sloan omits it as a shortcut. Only written
+    // at the start of a word, where it does not break the outline.
+    if (p === 'HH') { if (!shortcuts && i === 0) out.push('H'); return; }
     if (p === 'W' && i === 0 && /^wh/i.test(word)) { out.push('WH'); return; }
     out.push(SIMPLE[p]);
   });
@@ -137,7 +139,7 @@ export function phonesToTokens(phones, word = '') {
 }
 
 // Rough spelling rules for words the dictionary lacks.
-export function guessTokens(word) {
+export function guessTokens(word, { shortcuts = true } = {}) {
   let w = word.toLowerCase().replace(/[^a-z]/g, '');
   if (w.length > 2 && w.endsWith('e') && !/[aeiou]e$/.test(w)) w = w.slice(0, -1);
   const out = [];
@@ -166,7 +168,7 @@ export function guessTokens(word) {
     else if (c === 'c') take(1, 'eiy'.includes(w[i + 1] || '#') ? 'S' : 'K');
     else if (c === 'g') take(1, 'eiy'.includes(w[i + 1] || '#') ? 'J' : 'G');
     else if (c === 'x') take(1, 'K', 'S');
-    else if (c === 'h') take(1);
+    else if (c === 'h') { if (!shortcuts && i === 0) take(1, 'H'); else take(1); }
     else if (c === 'j') take(1, 'J');
     else if (c === 'q') take(1, 'K');
     else take(w[i + 1] === c ? 2 : 1, c.toUpperCase());
@@ -174,13 +176,13 @@ export function guessTokens(word) {
   return out.filter((t) => TOKENS.includes(t));
 }
 
-export function wordToTokens(word) {
+export function wordToTokens(word, opts = {}) {
   const key = word.toLowerCase().replace(/’/g, "'");
   const code = lookup(key) ?? lookup(key.replace(/'s$/, ''));
-  if (!code) return { tokens: guessTokens(word), guessed: true };
+  if (!code) return { tokens: guessTokens(word, opts), guessed: true };
   const phones = [...code].map((c) => DECODE[c]);
   if (key.endsWith("'s") && !lookup(key)) phones.push(/[ptkf]$/i.test(key.slice(0, -2)) ? 'S' : 'Z');
-  return { tokens: phonesToTokens(phones, key), guessed: false };
+  return { tokens: phonesToTokens(phones, key, opts), guessed: false };
 }
 
 export const toDuployan = (tokens) => tokens.map((t) => String.fromCodePoint(...(CODEPOINTS[t] || []))).join('');
@@ -194,7 +196,7 @@ export function transcribe(text, { useSigles = true } = {}) {
       if (/^\d+$/.test(word)) { items.push({ text: word, tokens: [], number: true }); return; }
       const lower = word.toLowerCase();
       if (useSigles && SIGLES[lower]) { items.push({ text: word, tokens: SIGLES[lower], sigle: true }); return; }
-      const { tokens, guessed } = wordToTokens(word);
+      const { tokens, guessed } = wordToTokens(word, { shortcuts: useSigles });
       items.push({ text: word, tokens, guessed, properNoun: /^[A-Z]/.test(word) && idx > 0 && word !== 'I' });
     });
     if (items.length) sentences.push(items);

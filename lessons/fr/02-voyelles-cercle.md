@@ -59,13 +59,21 @@ apport ovale accord moral canal somme dommage orage relate
 chaos boa zoo noua rouage
 ```
 
-## oi 写成 a
+## oi 写成 a（速度简写）
 
-*oi* 读 [wa]。Duployé 不把它当成双元音，**直接写成 a**：
+*oi* 读 [wa]。教材的做法是不把它当双元音，**直接写成 a**，少写一个圈：
 
 ```steno sounds
 oiseau fois toit loi voir toile soir
 ```
+
+代价是信息丢失：*loi* 和 *la*、*moi* 和 *ma*、*voir* 和 *var* 会写成同一个样子，只能靠上下文分辨。如果你更在意准确，就按读音写成 **ou + a**，把两个元音顺着连起来（按上面讲的双元音规则）：
+
+```steno sounds nosigles
+oiseau fois toit loi voir toile soir
+```
+
+画布上的 **Sigles** 开关默认关闭，用的就是这种完整写法；打开开关才会用 a 代替 oi。
 
 ## 专有名词和数字
 

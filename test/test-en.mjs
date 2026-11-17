@@ -20,6 +20,10 @@ for (const [w, exp] of Object.entries(CASES)) {
   const got = wordToTokens(w).tokens.join(' ');
   if (got !== exp) { fail++; console.log(`✗ ${w.padEnd(10)} got: ${got.padEnd(18)} want: ${exp}`); }
 }
+for (const [w, exp] of Object.entries({ house: 'H ow S', have: 'H ă V', behind: 'B ĭ ī N D' })) {
+  const got = wordToTokens(w, { shortcuts: false }).tokens.join(' ');
+  if (got !== exp) { fail++; console.log(`✗ full ${w} got: ${got} want: ${exp}`); }
+}
 console.log(`words: ${Object.keys(CASES).length - fail}/${Object.keys(CASES).length} pass`);
 const s = transcribe('The cat and the dog. Zxqv went to Paris.');
 console.log(s.map((sent) => sent.map((x) => `${x.text}[${x.tokens.join(' ')}]${x.sigle ? '*' : ''}${x.guessed ? '?' : ''}`).join(' ')).join('\n'));

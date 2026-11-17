@@ -6,7 +6,8 @@
 // Notable conventions (Sténographie intégrale, pp. 1–17):
 //   - [e] and [ɛ] are both "é"; [ø] and [œ] are both "eu"
 //   - the mute / schwa e is never written (consonants "carry" it)
-//   - "oi" is written simply as "a"; "ui" is written simply as "i"
+//   - shortcuts (only with ctx.shortcuts): "oi" written as "a", "ui" written as "i";
+//     without them, oi is ou + a and ui is u + i, as pronounced
 //
 // The output is a best guess. French spelling has many exceptions, which is
 // why the UI lets the learner edit the phonemes of every word.
@@ -101,8 +102,13 @@ function eSound(w, i) {
   return 'é'; // e + two consonants: merci, reste
 }
 
+// Exceptions spelled with the oi/ui shortcuts, and their full forms.
+const FULL_FORMS = { huit: 'u i T', doivent: 'D ou a V' };
+
 export function wordToPhonemes(raw, ctx = {}) {
+  const short = ctx.shortcuts !== false; // the manual's speed shortcuts (oi -> a, ui -> i)
   let w = raw.toLowerCase().normalize('NFC').replace(/’/g, "'");
+  if (!short && FULL_FORMS[w] !== undefined) return parse(FULL_FORMS[w]);
   if (EXCEPTIONS[w] !== undefined) return parse(EXCEPTIONS[w]);
   const orig = w;
   const { stem } = stripEnding(w, ctx);
@@ -133,15 +139,15 @@ export function wordToPhonemes(raw, ctx = {}) {
     if (/^(on|om)/.test(r) && nasalOK(w, i, 2, at)) { push('on'); i += 2; continue; }
     if (/^(in|im|yn|ym)/.test(r) && nasalOK(w, i, 2, at)) { push('in'); i += 2; continue; }
     if (/^(un|um)/.test(r) && nasalOK(w, i, 2, at)) { push('un'); i += 2; continue; }
-    if (/^oy[aeiou]/.test(r)) { push('a', 'i'); i += 2; continue; } // voyage
+    if (/^oy[aeiou]/.test(r)) { if (short) push('a', 'i'); else push('ou', 'a', 'i'); i += 2; continue; } // voyage
     if (/^ay[aeiou]/.test(r)) { push('é', 'i'); i += 2; continue; } // payer
-    if (/^(oi|oî)/.test(r)) { push('a'); i += 2; continue; } // oi is written as a
+    if (/^(oi|oî)/.test(r)) { if (short) push('a'); else push('ou', 'a'); i += 2; continue; } // oi: [wa]
     if (/^(ou|où|oû)/.test(r)) { push('ou'); i += 2; continue; }
     if (/^(au)/.test(r)) { push('o'); i += 2; continue; }
     if (/^(ai|aî|ei)/.test(r)) { push('é'); i += 2; continue; }
     if (/^(eu|eû|œu)/.test(r)) { push('eu'); i += r.startsWith('œu') ? 2 : 2; continue; }
     if (c === 'œ') { push('eu'); i += 1; continue; }
-    if (r.startsWith('ui') && !(prev === 'q' || prev === 'g')) { push('i'); i += 2; continue; } // ui is written as i
+    if (r.startsWith('ui') && !(prev === 'q' || prev === 'g')) { if (short) push('i'); else push('u', 'i'); i += 2; continue; } // ui: [ɥi]
     if ('éèêë'.includes(c)) { push('é'); i += 1; continue; }
     if (c === 'e') { const s = eSound(w, i); if (s) push(s); i += 1; continue; }
     if ('aàâä'.includes(c)) { push('a'); i += 1; continue; }
