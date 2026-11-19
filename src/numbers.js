@@ -33,14 +33,28 @@ export function frenchNumber(n) {
   return [thousands, r ? below1000(r) : ''].filter(Boolean).join(' ');
 }
 
-/**
- * A number to practise: a quarter each from 0–9, 10–99, 100–999 and 1000–9999,
- * so short numbers (where the irregular words are) come up as often as long ones.
- */
+// Where French numbers are hard, weighted for practice:
+//   70–99 (soixante-dix … quatre-vingt-dix-neuf) most of all,
+//   17–69 for the "et un" forms, 0–16 for the irregular words,
+//   hundreds and thousands, and round numbers for the plural s
+//   (quatre-vingts, deux cents, but deux cent un, quatre-vingt-un).
+const BANDS = [
+  [0.12, () => int(0, 16)],
+  [0.15, () => int(17, 69)],
+  [0.25, () => int(70, 99)],
+  [0.22, () => int(100, 999)],
+  [0.18, () => int(1000, 9999)],
+  [0.08, () => [80, int(1, 9) * 100, int(1, 9) * 1000, int(1, 9) * 1000 + int(2, 9) * 100, int(1, 9) * 100 + 80][int(0, 4)]],
+];
+let rnd = Math.random;
+const int = (lo, hi) => lo + Math.floor(rnd() * (hi - lo + 1));
+
+/** A number from 0–9999 to practise, drawn from the bands above. */
 export function randomNumber(rand = Math.random) {
-  const band = Math.floor(rand() * 4);
-  const lo = band ? 10 ** band : 0, hi = 10 ** (band + 1);
-  return lo + Math.floor(rand() * (hi - lo));
+  rnd = rand;
+  let r = rand();
+  for (const [w, f] of BANDS) { if (r < w) return f(); r -= w; }
+  return BANDS[0][1]();
 }
 
 /**

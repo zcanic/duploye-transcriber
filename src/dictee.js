@@ -54,7 +54,21 @@ const numberQuestion = (n) => (n > 0 && Math.random() < 1 / 6
   ? { fr: frenchOrdinal(n), zh: String(n), sup: n === 1 ? 'er' : 'e', num: true, key: `o${n}` }
   : { fr: frenchNumber(n), zh: String(n), num: true, key: `n${n}` });
 
+// what you missed comes back a few questions later (and again, until you get it)
+let asked = 0;
+let review = []; // [{q, at}]
+let lastWasReview = false;
+
 function pick() {
+  asked++;
+  // never two reviews in a row, so new questions keep coming even after a bad streak
+  const due = lastWasReview ? -1 : review.findIndex((r) => r.at <= asked && r.q.num === (state.mode === 'numbers'));
+  lastWasReview = due >= 0;
+  if (due >= 0) {
+    const [{ q: again }] = review.splice(due, 1);
+    recent = [again.key, ...recent].slice(0, 40);
+    return { ...again, tries: 0, done: false };
+  }
   for (let i = 0; i < 30; i++) {
     const next = state.mode === 'numbers'
       ? numberQuestion(randomNumber())
@@ -118,6 +132,7 @@ async function ask() {
 function settle(right) {
   q.done = true;
   state.total++;
+  if (!right || q.tries) review.push({ q, at: asked + 3 + Math.floor(Math.random() * 3) });
   if (right) state.right++;
   $('score').textContent = `${state.right} / ${state.total}`;
   $('answer').textContent = q.fr;
