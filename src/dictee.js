@@ -4,7 +4,7 @@
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
 import { InkSheet, buildItems, prepare } from './sheet.js';
-import { frenchNumber, chineseNumber, randomNumber } from './numbers.js';
+import { frenchNumber, randomNumber } from './numbers.js';
 import { isRight } from './check.js';
 
 const sys = SYSTEMS.fr;
@@ -23,7 +23,7 @@ const state = {
 };
 let words = [];       // [{fr, zh}]
 let recent = [];      // keys of the last few questions, not repeated
-let q = null;         // {fr, zh, sub, key, tries, done}
+let q = null;         // {fr, zh, num, key, tries, done}
 let seq = 0;
 
 // ---------- speech ----------
@@ -52,15 +52,17 @@ async function loadWords() {
 function pick() {
   for (let i = 0; i < 30; i++) {
     const next = state.mode === 'numbers'
-      ? ((n) => ({ fr: frenchNumber(n), zh: chineseNumber(n), sub: String(n), key: `n${n}` }))(randomNumber())
-      : ((w) => ({ fr: w.fr, zh: w.zh, sub: '', key: w.fr }))(words[Math.floor(Math.random() * words.length)]);
+      ? ((n) => ({ fr: frenchNumber(n), zh: String(n), num: true, key: `n${n}` }))(randomNumber())
+      : ((w) => ({ fr: w.fr, zh: w.zh, num: false, key: w.fr }))(words[Math.floor(Math.random() * words.length)]);
     if (!recent.includes(next.key)) { recent = [next.key, ...recent].slice(0, 40); return { ...next, tries: 0, done: false }; }
   }
   return null;
 }
 
 const steno = $('steno');
-const sheet = new InkSheet(steno.querySelector('g'), { unit: 0.06, width: () => Math.min(380, innerWidth - 88), gloss: () => false, maxInkMs: 1600 });
+// larger writing on wide screens, where the sheet is larger too (see dictee.css)
+const wide = matchMedia('(min-width: 900px) and (min-height: 640px)');
+const sheet = new InkSheet(steno.querySelector('g'), { unit: 0.06, width: () => (wide.matches ? 500 : Math.min(380, innerWidth - 88)), gloss: () => false, maxInkMs: 1600 });
 // write the French in full (no sigles) with the open vowels marked: the house rule
 const itemsOf = (fr) => buildItems(fr.replace(/,/g, ' '), sys, { useSigles: false, accents: true });
 
@@ -77,8 +79,8 @@ async function ask() {
     q = next;
     $('sheet').classList.remove('right', 'wrong');
     $('ask').classList.remove('right', 'wrong');
-    $('prompt').textContent = q.zh;
-    $('sub').textContent = q.sub;
+    $('prompt').textContent = q.zh; // the Chinese, or the digits for a number
+    $('prompt').classList.toggle('num', q.num);
     $('answer').textContent = ''; // filled in only when revealed
     $('note').textContent = '';
     $('note').classList.remove('again');
@@ -88,6 +90,7 @@ async function ask() {
     const guess = $('guess');
     guess.value = '';
     guess.readOnly = false;
+    sheet.unit = wide.matches ? 0.078 : 0.06;
     const size = sheet.set(items, sys, { inkAll: true, ink: false });
     const pad = 14, w = size.used + pad * 2, h = size.h + pad * 2;
     steno.setAttribute('viewBox', `${-pad} ${-pad} ${w} ${h}`);

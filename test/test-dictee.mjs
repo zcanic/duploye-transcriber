@@ -1,5 +1,5 @@
 // French numbers and lenient answer checking for the dictation page.
-import { frenchNumber, chineseNumber, randomNumber } from '../src/numbers.js';
+import { frenchNumber, randomNumber } from '../src/numbers.js';
 import { isRight } from '../src/check.js';
 
 let fail = 0;
@@ -13,9 +13,6 @@ const FR = {
   2200: 'deux mille deux cents', 9999: 'neuf mille neuf cent quatre-vingt-dix-neuf',
 };
 for (const [n, w] of Object.entries(FR)) eq(frenchNumber(+n), w, n);
-const ZH = { 0: '零', 7: '七', 10: '十', 15: '十五', 20: '二十', 110: '一百一十', 200: '两百', 305: '三百零五',
-  1005: '一千零五', 1010: '一千零一十', 2000: '两千', 2400: '两千四百', 9999: '九千九百九十九' };
-for (const [n, w] of Object.entries(ZH)) eq(chineseNumber(+n), w, `zh ${n}`);
 for (let i = 0; i < 2000; i++) { const n = randomNumber(); if (!(n >= 0 && n <= 9999)) { fail++; console.log('✗ random', n); break; } }
 
 const OK = [['Quatre vingt dix', 'quatre-vingt-dix'], ['quatre-vingt', 'quatre-vingts'], ['deux cent', 'deux cents'],

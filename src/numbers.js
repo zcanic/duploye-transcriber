@@ -1,6 +1,6 @@
-// Numbers 0–9999 spelled out in French (traditional spelling: hyphens below
-// a hundred, "et" in 21, 31 … 71, "quatre-vingts" and "deux cents" plural) and
-// written in Chinese numerals, for the dictation page.
+// Numbers 0–9999 spelled out in French, for the dictation page (traditional
+// spelling: hyphens below a hundred, "et" in 21, 31 … 71, "quatre-vingts" and
+// "deux cents" plural).
 
 const UNITS = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf',
   'dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
@@ -31,22 +31,6 @@ export function frenchNumber(n) {
   const k = Math.floor(n / 1000), r = n % 1000;
   const thousands = k ? (k === 1 ? 'mille' : `${UNITS[k]} mille`) : '';
   return [thousands, r ? below1000(r) : ''].filter(Boolean).join(' ');
-}
-
-const ZH = '零一二三四五六七八九';
-/** 347 -> "三百四十七", 1005 -> "一千零五", 15 -> "十五", 2000 -> "两千". */
-export function chineseNumber(n) {
-  if (n === 0) return '零';
-  const digits = String(n).padStart(4, '0').split('').map(Number); // 千 百 十 个
-  const units = ['千', '百', '十', ''];
-  let out = '', zero = false;
-  digits.forEach((d, i) => {
-    if (!d) { if (out) zero = true; return; }
-    if (zero) { out += '零'; zero = false; }
-    const word = d === 2 && i < 2 ? '两' : ZH[d];
-    out += (i === 2 && d === 1 && !out) ? '十' : word + units[i]; // 十五, not 一十五
-  });
-  return out;
 }
 
 /**

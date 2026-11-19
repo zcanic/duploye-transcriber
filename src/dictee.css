@@ -51,8 +51,7 @@ button, input { font: inherit; color: inherit; }
 .steno .gloss, .steno .hit { display: none; }
 .word { transition: none; }
 .prompt { font-size: 26px; font-weight: 500; line-height: 1.35; text-wrap: balance; }
-.sub { font: 500 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-.sub:empty { display: none; }
+.prompt.num { font: 500 34px/1.1 var(--f-mono); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
 /* the French appears under the prompt once answered */
 .answer { font: italic 34px/1.1 var(--f-display); text-wrap: balance; max-height: 0; opacity: 0; transform: translateY(4px);
   transition: opacity .3s, transform .35s var(--ease), max-height .35s var(--ease); }
@@ -90,6 +89,20 @@ button, input { font: inherit; color: inherit; }
   .answer { font-size: 30px; }
 }
 @media (pointer: coarse) { .keys { display: none; } }
+/* desktop: a bigger sheet, centred in the window, rather than a small card at the top */
+@media (min-width: 900px) and (min-height: 640px) {
+  :root { --w: 600px; }
+  .room { min-height: calc(100dvh - 60px); justify-content: center; gap: 18px; padding-bottom: 9vh; }
+  .sheet { min-height: 380px; padding: 44px 36px; border-radius: 26px; }
+  .body { gap: 18px; }
+  .prompt { font-size: 32px; }
+  .prompt.num { font-size: 44px; }
+  .answer { font-size: 46px; }
+  .ask input { height: 58px; font-size: 30px; padding: 0 20px; border-radius: 16px; }
+  .go { width: 58px; height: 58px; border-radius: 16px; }
+  .go svg { width: 22px; height: 22px; }
+  .note { font-size: 14px; }
+}
 @media (max-width: 380px) { .mark-word { display: none; } }
 @media (prefers-reduced-motion: reduce) {
   .body, .answer, .wash, .go path { transition: none !important; }
