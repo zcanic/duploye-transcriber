@@ -6,6 +6,7 @@ import { SYSTEMS } from './systems.js';
 import { InkSheet, buildItems, prepare } from './sheet.js';
 import { frenchNumber, frenchOrdinal, randomNumber } from './numbers.js';
 import { isRight } from './check.js';
+import { grade } from './deck.js';
 
 const sys = SYSTEMS.fr;
 const $ = (id) => document.getElementById(id);
@@ -46,7 +47,7 @@ async function loadWords() {
   // single words and short set phrases; skip patterns like "être en (pleine) forme" or "début / mi- / fin"
   words = data.topics.flatMap((t) => t.cards)
     .filter(([fr, , , zh]) => zh && fr.length <= 28 && !/[()/…+.?!0-9]/.test(fr))
-    .map(([fr, , , zh]) => ({ fr, zh }));
+    .map(([fr, pos, , zh]) => ({ fr, zh, id: `${fr.toLowerCase()}|${pos}` })); // id: the same card in Cards
 }
 
 // now and then (1 in 6) a number is asked as an ordinal: 21ᵉ -> vingt et unième
@@ -54,7 +55,10 @@ const numberQuestion = (n) => (n > 0 && Math.random() < 1 / 6
   ? { fr: frenchOrdinal(n), zh: String(n), sup: n === 1 ? 'er' : 'e', num: true, key: `o${n}` }
   : { fr: frenchNumber(n), zh: String(n), num: true, key: `n${n}` });
 
-// what you missed comes back a few questions later (and again, until you get it)
+// What you miss comes back a few questions later; each time you then get it
+// right, the gap grows (about 3, 8, then 20 questions) until it leaves the
+// queue. Another miss starts it over.
+const GAPS = [3, 8, 20];
 let asked = 0;
 let review = []; // [{q, at}]
 let lastWasReview = false;
@@ -72,7 +76,7 @@ function pick() {
   for (let i = 0; i < 30; i++) {
     const next = state.mode === 'numbers'
       ? numberQuestion(randomNumber())
-      : ((w) => ({ fr: w.fr, zh: w.zh, num: false, key: w.fr }))(words[Math.floor(Math.random() * words.length)]);
+      : ((w) => ({ fr: w.fr, zh: w.zh, id: w.id, num: false, key: w.fr }))(words[Math.floor(Math.random() * words.length)]);
     if (!recent.includes(next.key)) { recent = [next.key, ...recent].slice(0, 40); return { ...next, tries: 0, done: false }; }
   }
   return null;
@@ -129,10 +133,25 @@ async function ask() {
   setTimeout(() => n === seq && swap(), 200);
 }
 
+// Vocabulary results reach the flashcards: a miss puts the word on tomorrow's
+// review there; spelling it right while it is due counts as that review.
+function syncCard(id, clean) {
+  const progress = store.get('duploye.cards.progress', {});
+  const p = progress[id];
+  if (clean && !(p?.box && p.due <= Date.now())) return;
+  progress[id] = grade(p, clean);
+  store.set('duploye.cards.progress', progress);
+}
+
 function settle(right) {
   q.done = true;
   state.total++;
-  if (!right || q.tries) review.push({ q, at: asked + 3 + Math.floor(Math.random() * 3) });
+  const clean = right && !q.tries;
+  const step = clean ? (q.step ?? -1) + 1 : 0; // undefined step: a new question
+  if (!clean || q.step !== undefined) {
+    if (step < GAPS.length) review.push({ q: { ...q, step }, at: asked + GAPS[step] + Math.floor(Math.random() * 3) });
+  }
+  if (q.id) syncCard(q.id, clean);
   if (right) state.right++;
   $('score').textContent = `${state.right} / ${state.total}`;
   $('answer').textContent = q.fr;
