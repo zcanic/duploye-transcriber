@@ -90,6 +90,10 @@ async function ask() {
     const guess = $('guess');
     guess.value = '';
     guess.readOnly = false;
+    // the sheet is faded out here: drop the last question's strokes at once (no leftovers)
+    sheet.stop();
+    sheet.root.replaceChildren();
+    sheet.nodes.clear();
     sheet.unit = wide.matches ? 0.078 : 0.06;
     const size = sheet.set(items, sys, { inkAll: true, ink: false });
     const pad = 14, w = size.used + pad * 2, h = size.h + pad * 2;
