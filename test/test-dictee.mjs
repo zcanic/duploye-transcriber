@@ -1,5 +1,5 @@
 // French numbers and lenient answer checking for the dictation page.
-import { frenchNumber, randomNumber } from '../src/numbers.js';
+import { frenchNumber, frenchOrdinal, randomNumber } from '../src/numbers.js';
 import { isRight } from '../src/check.js';
 
 let fail = 0;
@@ -13,11 +13,16 @@ const FR = {
   2200: 'deux mille deux cents', 9999: 'neuf mille neuf cent quatre-vingt-dix-neuf',
 };
 for (const [n, w] of Object.entries(FR)) eq(frenchNumber(+n), w, n);
+const ORD = { 1: 'premier, première', 2: 'deuxième', 3: 'troisième', 4: 'quatrième', 5: 'cinquième', 9: 'neuvième', 11: 'onzième',
+  16: 'seizième', 21: 'vingt et unième', 30: 'trentième', 71: 'soixante et onzième', 80: 'quatre-vingtième', 81: 'quatre-vingt-unième',
+  99: 'quatre-vingt-dix-neuvième', 100: 'centième', 101: 'cent unième', 200: 'deux centième', 1000: 'millième', 2000: 'deux millième',
+  1001: 'mille unième', 3485: 'trois mille quatre cent quatre-vingt-cinquième' };
+for (const [n, w] of Object.entries(ORD)) eq(frenchOrdinal(+n), w, `ordinal ${n}`);
 for (let i = 0; i < 2000; i++) { const n = randomNumber(); if (!(n >= 0 && n <= 9999)) { fail++; console.log('✗ random', n); break; } }
 
 const OK = [['Quatre vingt dix', 'quatre-vingt-dix'], ['quatre-vingt', 'quatre-vingts'], ['deux cent', 'deux cents'],
   ['ete', 'été'], ['grande', 'grand, grande'], ['grand', 'grand, grande'], ['livre', 'le livre'], ['l arbre', "l'arbre"],
-  ['coeur', 'cœur'], [' rouge  gorge ', 'rouge-gorge'], ['Etroite', 'étroit, étroite']];
+  ['coeur', 'cœur'], [' rouge  gorge ', 'rouge-gorge'], ['Etroite', 'étroit, étroite'], ['premiere', 'premier, première'], ['vingt et unieme', 'vingt et unième']];
 for (const [t, a] of OK) eq(isRight(t, a), true, `accept "${t}" for "${a}"`);
 const NO = [['', 'été'], ['grands', 'grand, grande'], ['quatre vingt', 'quatre-vingt-dix'], ['le', 'le livre']];
 for (const [t, a] of NO) eq(isRight(t, a), false, `reject "${t}" for "${a}"`);

@@ -53,6 +53,7 @@ button, input { font: inherit; color: inherit; }
 .word.leaving { display: none; }
 .prompt { font-size: 26px; font-weight: 500; line-height: 1.35; text-wrap: balance; }
 .prompt.num { font: 500 34px/1.1 var(--f-mono); letter-spacing: .03em; font-variant-numeric: tabular-nums; }
+.prompt sup { font: italic .62em/0 var(--f-display); letter-spacing: 0; margin-left: .06em; color: var(--accent); } /* ordinal: 21ᵉ */
 /* the French appears under the prompt once answered */
 .answer { font: italic 34px/1.1 var(--f-display); text-wrap: balance; max-height: 0; opacity: 0; transform: translateY(4px);
   transition: opacity .3s, transform .35s var(--ease), max-height .35s var(--ease); }

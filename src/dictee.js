@@ -4,7 +4,7 @@
 import { ready } from './runtime.js';
 import { SYSTEMS } from './systems.js';
 import { InkSheet, buildItems, prepare } from './sheet.js';
-import { frenchNumber, randomNumber } from './numbers.js';
+import { frenchNumber, frenchOrdinal, randomNumber } from './numbers.js';
 import { isRight } from './check.js';
 
 const sys = SYSTEMS.fr;
@@ -49,10 +49,15 @@ async function loadWords() {
     .map(([fr, , , zh]) => ({ fr, zh }));
 }
 
+// now and then (1 in 6) a number is asked as an ordinal: 21ᵉ -> vingt et unième
+const numberQuestion = (n) => (n > 0 && Math.random() < 1 / 6
+  ? { fr: frenchOrdinal(n), zh: String(n), sup: n === 1 ? 'er' : 'e', num: true, key: `o${n}` }
+  : { fr: frenchNumber(n), zh: String(n), num: true, key: `n${n}` });
+
 function pick() {
   for (let i = 0; i < 30; i++) {
     const next = state.mode === 'numbers'
-      ? ((n) => ({ fr: frenchNumber(n), zh: String(n), num: true, key: `n${n}` }))(randomNumber())
+      ? numberQuestion(randomNumber())
       : ((w) => ({ fr: w.fr, zh: w.zh, num: false, key: w.fr }))(words[Math.floor(Math.random() * words.length)]);
     if (!recent.includes(next.key)) { recent = [next.key, ...recent].slice(0, 40); return { ...next, tries: 0, done: false }; }
   }
@@ -80,6 +85,7 @@ async function ask() {
     $('sheet').classList.remove('right', 'wrong');
     $('ask').classList.remove('right', 'wrong');
     $('prompt').textContent = q.zh; // the Chinese, or the digits for a number
+    if (q.sup) $('prompt').append(Object.assign(document.createElement('sup'), { textContent: q.sup }));
     $('prompt').classList.toggle('num', q.num);
     $('answer').textContent = ''; // filled in only when revealed
     $('note').textContent = '';

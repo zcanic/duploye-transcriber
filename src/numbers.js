@@ -42,3 +42,13 @@ export function randomNumber(rand = Math.random) {
   const lo = band ? 10 ** band : 0, hi = 10 ** (band + 1);
   return lo + Math.floor(rand() * (hi - lo));
 }
+
+/**
+ * The ordinal, 1–9999: 1 -> "premier, première", 21 -> "vingt et unième",
+ * 80 -> "quatre-vingtième", 200 -> "deux centième", 1000 -> "millième".
+ */
+export function frenchOrdinal(n) {
+  if (n === 1) return 'premier, première';
+  const words = frenchNumber(n).replace(/(vingt|cent)s$/, '$1');
+  return words.replace(/[a-zé]+$/, (w) => (w === 'un' ? 'unième' : w === 'cinq' ? 'cinquième' : w === 'neuf' ? 'neuvième' : `${w.replace(/e$/, '')}ième`));
+}
