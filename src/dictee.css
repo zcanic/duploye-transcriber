@@ -1,0 +1,97 @@
+@import url("tokens.css");
+
+/* Dictation: one quiet column. A dot-grid sheet with the shorthand and the Chinese,
+   and under it the line where the French is typed. Everything that moves is
+   transform or opacity. */
+:root { --w: min(440px, calc(100vw - 32px)); --good: #2f7d57; --again: #b4532a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --good: #6cc39a; --again: #e59572; } }
+:root[data-theme="dark"] { --good: #6cc39a; --again: #e59572; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 var(--f-ui); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+button, input { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grow { flex: 1; }
+
+/* header: the same wordmark as the other pages, so it glides between them */
+.top { display: flex; align-items: center; gap: 12px; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+.mark { display: flex; align-items: center; gap: 6px; color: var(--ink); }
+.mark-steno { height: 20px; width: 49px; flex: none; color: var(--accent); }
+.mark-word { font: italic 22px/1 var(--f-display); letter-spacing: .005em; }
+.mark-sub { font: 500 12px var(--f-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-left: 2px; }
+.seg { display: inline-flex; gap: 2px; background: var(--chip); border-radius: 10px; padding: 2px; }
+.seg-btn { height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); transition: background .2s, color .2s; }
+.seg-btn[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px #1b24401f; }
+.icon-btn { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 9px; background: transparent; cursor: pointer; color: var(--muted); }
+.icon-btn:hover { background: var(--chip); }
+.icon-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn[aria-pressed="true"] { color: var(--accent); }
+.icon-btn[aria-pressed="false"] .wave { opacity: 0; }
+
+.room { display: flex; flex-direction: column; align-items: center; gap: 14px; padding-block: 8px 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.meter { width: var(--w); display: flex; justify-content: flex-end; min-height: 18px; }
+.score { font: 500 12px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* the sheet */
+.sheet { position: relative; width: var(--w); min-height: 260px; border-radius: 22px; overflow: hidden;
+  background-color: var(--paper); background-image: radial-gradient(circle, var(--dot) 1.1px, transparent 1.35px); background-size: 22px 22px; background-position: 11px 11px;
+  border: 1px solid var(--line); box-shadow: var(--shadow); display: grid; place-items: center; padding: 30px 24px; text-align: center; }
+.sheet.shake { animation: shake .36s cubic-bezier(.36, .07, .19, .97); }
+@keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(4px); } }
+.wash { position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .35s; }
+.sheet.right .wash { opacity: 1; background: radial-gradient(120% 90% at 50% 100%, color-mix(in oklab, var(--good) 16%, transparent), transparent 70%); }
+.sheet.wrong .wash { opacity: 1; background: radial-gradient(120% 90% at 50% 100%, color-mix(in oklab, var(--again) 14%, transparent), transparent 70%); }
+.body { position: relative; display: grid; justify-items: center; gap: 14px; transition: opacity .22s, transform .3s var(--ease); }
+.body.out { opacity: 0; transform: translateY(6px); }
+.steno { display: block; max-width: 100%; overflow: visible; }
+.steno .g, .word .g { fill: var(--ink); }
+.word .g.accent { fill: var(--accent); } /* house-rule accent on open vowels */
+.steno .gloss, .steno .hit { display: none; }
+.word { transition: none; }
+.prompt { font-size: 26px; font-weight: 500; line-height: 1.35; text-wrap: balance; }
+.sub { font: 500 13px var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sub:empty { display: none; }
+/* the French appears under the prompt once answered */
+.answer { font: italic 34px/1.1 var(--f-display); text-wrap: balance; max-height: 0; opacity: 0; transform: translateY(4px);
+  transition: opacity .3s, transform .35s var(--ease), max-height .35s var(--ease); }
+.sheet.right .answer, .sheet.wrong .answer { max-height: 6em; opacity: 1; transform: none; }
+.sheet.right .answer { color: var(--good); }
+
+/* the answer line */
+.ask { width: var(--w); display: flex; gap: 8px; }
+.ask input { flex: 1; min-width: 0; height: 48px; padding: 0 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper);
+  font: italic 24px/1 var(--f-display); transition: border-color .2s, box-shadow .2s; }
+.ask input:focus { outline: none; border-color: color-mix(in oklab, var(--accent) 55%, var(--line)); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 14%, transparent); }
+.ask.right input { border-color: color-mix(in oklab, var(--good) 60%, var(--line)); }
+.ask.wrong input { border-color: color-mix(in oklab, var(--again) 60%, var(--line)); }
+.go { flex: none; width: 48px; height: 48px; padding: 0; display: grid; place-items: center; border: 0; border-radius: 14px; background: var(--ink); color: var(--paper); cursor: pointer; transition: transform .12s; }
+/* one symbol, centred: return (check) turns into an arrow (next) once answered */
+.go svg { grid-area: 1 / 1; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.go path { transition: opacity .2s, transform .25s var(--ease); }
+.go .next { opacity: 0; transform: translateX(-3px); }
+.go.done .enter { opacity: 0; transform: translateX(3px); }
+.go.done .next { opacity: 1; transform: none; }
+.go:active { transform: scale(.97); }
+.note { width: var(--w); min-height: 20px; margin-top: -6px; font-size: 13px; color: var(--muted); text-align: center; transition: opacity .2s; }
+.note.again { color: var(--again); }
+.foot { display: flex; align-items: center; gap: 12px; width: var(--w); font-size: 13px; color: var(--muted); }
+.link-btn { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 4px 0; text-decoration: underline; text-underline-offset: 3px; }
+.link-btn:hover { color: var(--ink); }
+.keys { font: 11px var(--f-mono); }
+
+@media (max-width: 600px) {
+  .mark-sub { display: none; }
+  .top { gap: 8px; }
+  .seg-btn { padding: 0 10px; }
+  .sheet { min-height: 210px; padding: 24px 18px; }
+  .prompt { font-size: 23px; }
+  .answer { font-size: 30px; }
+}
+@media (pointer: coarse) { .keys { display: none; } }
+@media (max-width: 380px) { .mark-word { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .body, .answer, .wash, .go path { transition: none !important; }
+  .sheet.shake { animation: none; }
+}

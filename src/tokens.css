@@ -62,4 +62,14 @@ button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 4p
 .site-menu a i { font-style: normal; color: var(--muted); font-size: 12px; }
 .site-menu a small { color: var(--muted); font-size: 12px; }
 .site-menu a[aria-current="page"] span { color: var(--accent); }
+/* the light/dark switch: the last row of the drawer */
+.site-menu-theme { grid-template-columns: 1fr auto; align-items: center; padding: 4px 4px 2px 10px; }
+.site-menu-theme > span { font-weight: 500; }
+.site-theme { display: inline-flex; gap: 2px; padding: 2px; border-radius: 10px; background: var(--chip); }
+.site-theme button { appearance: none; width: 32px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 8px; padding: 0;
+  background: transparent; color: var(--muted); cursor: pointer; transition: background .2s, color .2s, box-shadow .2s; }
+.site-theme button:hover { color: var(--ink); }
+.site-theme button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px #1b24401f; }
+.site-theme button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.site-theme svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 @media (prefers-reduced-motion: reduce) { .site-menu, .site-menu.closing { animation: none; } }

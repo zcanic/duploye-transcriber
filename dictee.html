@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duployé Dictée · read the shorthand, type the French</title>
+<link rel="canonical" href="https://zcanic.github.io/duploye-transcriber/dictee.html">
+<meta name="theme-color" content="#ffffff">
+<script>try{var t=localStorage.getItem("duploye.theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Duployé Transcriber">
+<meta property="og:title" content="Duployé Dictée · read the shorthand, type the French">
+<meta property="og:description" content="Read a French word or a number written in Duployé shorthand (sténographie Duployé), with its Chinese meaning, and type the French. Accents are optional.">
+<meta property="og:url" content="https://zcanic.github.io/duploye-transcriber/dictee.html">
+<meta property="og:image" content="https://zcanic.github.io/duploye-transcriber/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Duployé Transcriber: the words sténographie Duployé written in Duployé shorthand">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Duployé Dictée · read the shorthand, type the French">
+<meta name="twitter:description" content="Read a French word or a number written in Duployé shorthand (sténographie Duployé), with its Chinese meaning, and type the French. Accents are optional.">
+<meta name="twitter:image" content="https://zcanic.github.io/duploye-transcriber/assets/og.png">
+<meta name="description" content="Read a French word or a number written in Duployé shorthand (sténographie Duployé), with its Chinese meaning, and type the French. Accents are optional.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=fallback">
+<link rel="preload" href="fonts/NotoSansDuployan-Regular.ttf" as="fetch" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="src/dictee.css">
+<script>
+  // Let heavy work wait until the page cross-fade has finished.
+  addEventListener('pagereveal', (e) => {
+    if (!e.viewTransition) return;
+    e.viewTransition.ready.catch(() => {});
+    window.__pageReveal = e.viewTransition.finished.catch(() => {});
+  });
+</script>
+</head>
+<body>
+<header class="top">
+  <button type="button" class="mark" aria-label="Duployé: pages and links" aria-haspopup="true" aria-expanded="false" aria-controls="siteMenu"><svg class="mark-steno" viewBox="-40 -684 2325 945.8689270019531" aria-hidden="true"><g transform="scale(1,-1)" fill="currentColor"><path d="M85,35C85,16 101,0 120,0L1120,0C1139,0 1155,16 1155,35C1155,54 1139,70 1120,70L120,70C101,70 85,54 85,35Z" transform="translate(0,0)"/><path d="M85,35C85,16 101,0 120,0C305,0 455,150 455,335C455,354 439,370 420,370C401,370 385,354 385,335C385,189 266,70 120,70C101,70 85,54 85,35Z" transform="translate(1000,0)"/><path d="M85,35C85,16 101,0 120,0C139,0 155,16 155,35L155,535C155,554 139,570 120,570C101,570 85,554 85,535L85,35Z" transform="translate(1300,-200)"/><path d="M145,10L645,510C677.1,542.1 626.9,591.9 595,560L95,60C62.9,27.9 113.1,-21.9 145,10Z" transform="translate(1300,-200)"/><path d="M139,116L245,10C277.1,-22.1 326.9,28.1 295,60L189,166C144,211 144,283 189,328C234,373 306,373 351,328C396,283 396,211 351,166C318.9,133.9 369.1,84.1 401,116C473,188 473,306 401,378C329,450 211,450 139,378C67,306 67,188 139,116Z" transform="translate(1544,194)"/><path d="M95,110L166,40C219,-13 304,-13 357,40C389.0,72.0 338.4,120.4 307,89C282,64 240,64 215,89L145,160C112.9,192.1 63.1,141.9 95,110Z" transform="translate(1694,94)"/><path d="M145,152C170,177 212,177 237,152C262,127 262,85 237,60C205.4,28.4 254.2,-21.8 286,10C339,63 339,148 286,201C233,254 148,254 95,201C63.0,169.0 113.6,120.6 145,152Z" transform="translate(1906,-18)"/></g></svg><span class="mark-word">Duployé</span></button><span class="mark-sub">Dictée</span>
+  <span class="grow"></span>
+  <div class="seg" role="group" aria-label="What to practise">
+    <button type="button" class="seg-btn" data-mode="words" aria-pressed="true" title="French vocabulary">词汇</button>
+    <button type="button" class="seg-btn" data-mode="numbers" aria-pressed="false" title="Numbers from 0 to 9999">数字</button>
+  </div>
+  <button type="button" id="speakToggle" class="icon-btn" aria-pressed="true" title="Read the answer aloud">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8h3l4-3v10l-4-3H4z"/><path class="wave" d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9"/></svg>
+  </button>
+</header>
+
+<main class="room">
+  <div class="meter"><span id="score" class="score" aria-live="polite"></span></div>
+
+  <section class="sheet" id="sheet" aria-live="polite">
+    <div class="wash" aria-hidden="true"></div>
+    <div class="body" id="body">
+      <svg class="steno" id="steno" aria-hidden="true"><g></g></svg>
+      <div class="prompt" id="prompt"></div>
+      <div class="sub" id="sub"></div>
+      <div class="answer" id="answer" lang="fr"></div>
+    </div>
+  </section>
+
+  <form class="ask" id="ask" autocomplete="off">
+    <input id="guess" type="text" lang="fr" inputmode="text" enterkeyhint="go" autocapitalize="off" autocorrect="off" spellcheck="false"
+      aria-label="The French, accents optional">
+    <button type="submit" id="go" class="go" aria-label="Check"><svg viewBox="0 0 20 20" aria-hidden="true"><path class="enter" d="M15 5v4.5a2 2 0 0 1-2 2H5m3-3.2L4.8 11.5 8 14.7"/><path class="next" d="M4.5 10h11m-4-4 4 4-4 4"/></svg></button>
+  </form>
+  <div class="note" id="note"></div>
+  <div class="foot"><button type="button" class="link-btn" id="reveal">看答案</button><span class="grow"></span><span class="keys">回车 检查 · Esc 看答案</span></div>
+</main>
+
+<script type="module" src="src/dictee.js"></script>
+<script type="module" src="src/menu.js"></script>
+</body>
+</html>
